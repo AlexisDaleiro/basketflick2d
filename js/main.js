@@ -10,6 +10,8 @@ import { Renderer } from './render/Renderer.js';
 import { IdleWarning } from './ui/IdleWarning.js';
 import { SkeletonScreen } from './ui/SkeletonScreen.js';
 import { h, show } from './ui/dom.js';
+import { PhysicsLab } from './game/PhysicsLab.js';
+import { PhysicsScreen } from './ui/PhysicsScreen.js';
 
 const app = document.querySelector('#app');
 const screens = document.querySelector('#screens');
@@ -39,13 +41,20 @@ let interruptedPlaying = false;
 let warningVisible = false;
 let previousFocus = null;
 const states = {};
+const lab = new PhysicsLab({ debug, onContact: event => bus.emit(event.type, event) });
+let debugOverlay = null;
 for (const name of Object.values(STATES)) {
-  states[name] = new SkeletonScreen({ name, root: screens, navigate: next => machine.transition(next) });
+  states[name] = name === STATES.PLAYING
+    ? new PhysicsScreen({ root: screens, lab, navigate: next => machine.transition(next) })
+    : new SkeletonScreen({ name, root: screens, navigate: next => machine.transition(next) });
 }
 const machine = new StateMachine({ states, bus, development });
 const loop = new GameLoop({
   update: dt => machine.update(dt),
-  render: () => { renderer.begin(); machine.render(renderer.ctx); },
+  render: () => {
+    renderer.begin(); machine.render(renderer.ctx);
+    if (debugOverlay) { debugOverlay.render(renderer.ctx); debugOverlay.frame(performance.now()); }
+  },
 });
 const input = new InputManager({
   surface: app,
@@ -78,7 +87,7 @@ function reconcile() {
   screens.inert = landscape || warningVisible;
   warningRoot.inert = landscape;
   input.setEnabled(!hidden && !landscape && !warningVisible);
-  if (hidden || landscape) loop.stop();
+  if (hidden || landscape) { loop.stop(); debugOverlay?.pause(); }
   else loop.start();
 }
 
@@ -123,7 +132,13 @@ input.start();
 kiosk.start();
 reconcile();
 
-if (debug) window.__TB2D_DEBUG__ = Object.freeze({ machine, loop, input, idle, renderer });
+if (debug) {
+  import('./debug/DebugOverlay.js').then(({ DebugOverlay }) => {
+    if (signal.aborted) return;
+    debugOverlay = new DebugOverlay({ root: app, lab, machine, loop });
+    window.__TB2D_DEBUG__ = Object.freeze({ machine, loop, input, idle, renderer, lab });
+  });
+}
 
 window.addEventListener('pageshow', () => handleVisibility(document.hidden), { signal });
 window.addEventListener('pagehide', event => {
@@ -135,6 +150,7 @@ window.addEventListener('pagehide', event => {
   loop.stop();
   machine.destroy();
   renderer.destroy();
+  debugOverlay?.destroy();
   kiosk.destroy();
   if (debug) delete window.__TB2D_DEBUG__;
 }, { signal });

@@ -74,3 +74,66 @@ rechazos se capturan, pero su soporte real en Android/Safari se verificará all�
 
 La prueba de 8 horas, 200 rondas y los 60 fps en Android/iPad reales están
 pendientes de H6; no se han ejecutado ni se dan por aprobadas en H1.
+
+## Alcance H2
+
+- Se implementan `Vec2`, `collide`, `World`, `FlickTracker`, `Ball`, `Hoop`,
+  `ShotJudge` y `DebugOverlay`, con tests puros en Node. `launch.js` separa el
+  vector de lanzamiento y `predict.js` la predicción para diagnóstico.
+- `PhysicsLab` y `PhysicsScreen` reemplazan únicamente la vista de PLAYING del
+  esqueleto. Proporcionan una prueba de tiro ejecutable sin adelantar `Round`,
+  cronómetro, rachas, demo automática, HUD definitivo, audio ni persistencia.
+  El +2/+3 que aparece es el resultado del juez por tiro, sin acumulación.
+- `World` preasigna seis pelotas, vectores, contacto y evento; todos se reutilizan.
+  H2 mantiene una pelota por vez en la prueba. Se repone en el primer paso tras
+  terminar el fade de 600 ms, siempre en (360, 1380). El respawn a 450 ms, spawn
+  aleatorio y límite de tres pelotas en vuelo son responsabilidad de Round en H3.
+- Las entradas conservan event.timeStamp, transformado a unidades del mundo por
+  InputManager; los relojes de tiro usan milisegundos de simulación fija. Rotar
+  pausa esos relojes y cancela el swipe, mientras la inactividad sigue usando
+  tiempo real. Ocultar/volver, salir o ir al admin limpia el mundo y el gesto.
+- La asistencia se aplica después de los clamps, como indica §3.3. No se vuelve
+  a limitar la magnitud después de corregir vx: hacerlo alteraría vy. El test
+  analítico permite aimAssist=1; el valor inicial de la prueba sigue siendo 0,15.
+- La abertura para la compuerta A comprueba el centro de la pelota entre puntas
+  más/menos el radio de la punta, exactamente como §3.6. La física de contacto
+  ya impide que el cuerpo de la pelota atraviese las puntas.
+- La compuerta A renueva su timestamp en cada cruce descendente válido. La marca
+  upwardThrough impide confirmar tiros que entraron desde abajo; cada resolución
+  pasa a dead y dispara el callback una sola vez.
+- Hoop prepara geometría previa/actual y velocidad cinemática, con compuertas
+  que se mueven junto al aro. En H2 permanece fijo; Round habilitará la oscilación
+  de los últimos diez segundos en H3 y el toggle se agregará en H5.
+- El tracker mantiene 32 muestras en Float64Array y preserva el inicio fuera del
+  ring para distancia/duración. Usa una tolerancia de 1e−8 u en el borde del radio
+  de agarre para evitar rechazos por redondeo IEEE-754.
+- Los contactos publican sfx:rim/sfx:board mediante el EventBus existente, con
+  intensidad de velocidad normal relativa y cooldown de 60 ms por pelota. No hay
+  sonido hasta conectar Sfx en H3.
+- El render de H2 es geometría procedural mínima. La red respeta el trapecio de
+  §3.1 y es visual; no tiene colisionadores. El render completo sigue en H3.
+- Debug se importa dinámicamente solo con ?debug=1. No hay arrays de predicción
+  ni listeners de sus atajos en modo normal. R reinicia la prueba H2 en PLAYING;
+  A usa la navegación existente al admin, todavía sin PIN según el alcance H5.
+- La trayectoria usa el mismo integrador y arrastre, ocho pasos fijos por punto
+  a 1/30 s; representa vuelo libre sin colisiones y se calcula una vez por tiro.
+  Los textos de diagnóstico se actualizan cada 200 ms; no se formatean por frame.
+- El anillo de progreso depende del disparador secreto AdminTrigger (H5). Se
+  conecta allí; H2 no simula una zona secreta ni muestra progreso ficticio.
+
+## Verificación H2 · 23/10/2026
+
+- `npm test`: 47 tests aprobados, incluidos los 15 de H1.
+- `npm run dev`: arranque en http://127.0.0.1:5173, sin errores del servidor.
+- Chrome headless: 25 comprobaciones aprobadas, cero errores de consola,
+  excepciones o recursos fallidos. Se verificaron modo normal y ?debug=1.
+- Un swipe táctil generado mediante Chrome DevTools Protocol, con event.timeStamp
+  de 60 ms, produjo swish en el loop rAF activo; se observaron compuertas,
+  feedback, fade y vuelta de la misma pelota a ready. También se probaron tap
+  corto, cancelación táctil, R/A, pausa por orientación, limpieza al volver de
+  visibilidad oculta e idle, y 100 ciclos de navegación sin acumular listeners.
+- Las pruebas de visibilidad e inactividad simulan el evento y adelantan la marca
+  de actividad; no equivalen a validación de APIs ni rendimiento en tablet real.
+- Se inspeccionaron capturas verticales del modo normal y debug en `.artifacts/`
+  (artefactos locales ignorados por Git). Quedan pendientes las pruebas físicas
+  en Android/iPad y el soak de H6; no se presentan como ejecutados.
