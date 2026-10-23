@@ -77,6 +77,17 @@ pendientes de H6; no se han ejecutado ni se dan por aprobadas en H1.
 
 ## Alcance H2
 
+- Corrección posterior a la prueba del usuario: en escritorio local/debug con
+  puntero principal fino se permite una ventana horizontal y se omiten Fullscreen
+  y el bloqueo de orientación. El primer clic podía ampliar la vista al monitor
+  horizontal y bloquear el juego. Renderer ya centra el mundo lógico vertical;
+  no cambian la física ni sus coordenadas. Tablet/emulación con puntero grueso
+  conserva el overlay y la pausa horizontal. Es una excepción de desarrollo a
+  §2.3/§7, coherente con el fallback de mouse previsto en §1.3.
+  Verificación de esta corrección: 50 tests aprobados; en el navegador integrado
+  del usuario, recarga y clic real en «Jugar» abren PLAYING sin el aviso de giro,
+  con pelota/aro visibles y sin errores de consola.
+
 - Se implementan `Vec2`, `collide`, `World`, `FlickTracker`, `Ball`, `Hoop`,
   `ShotJudge` y `DebugOverlay`, con tests puros en Node. `launch.js` separa el
   vector de lanzamiento y `predict.js` la predicción para diagnóstico.

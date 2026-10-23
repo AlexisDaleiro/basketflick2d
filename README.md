@@ -10,8 +10,10 @@ npm run dev
 npm test
 ```
 
-Abre http://127.0.0.1:5173 en una ventana **vertical** o en la emulación de tableta
-vertical de DevTools. No hace falta instalar paquetes. También puede servirse la
+Abre http://127.0.0.1:5173. En escritorio local con mouse puedes usar cualquier
+tamaño de ventana: el mundo vertical se centra y no se pide pantalla completa
+automáticamente. En tablet o emulación táctil usa orientación **vertical**.
+No hace falta instalar paquetes. También puede servirse la
 carpeta con cualquier servidor estático.
 
 Recorrido: «¡TOCA AQUÍ PARA JUGAR!» → «FINALIZAR PRUEBA» → «JUGAR DE NUEVO» o
@@ -35,7 +37,7 @@ la pelota sigue moviéndose y desaparece durante 600 ms, y se reutiliza para vol
 a tirar desde el mismo punto. H3 añadirá el ritmo de múltiples pelotas y los spawns
 aleatorios. Si haces el gesto fuera de la pelota, se ignora.
 
-Prueba la orientación horizontal: aparece «Gira la tableta» y se pausa el loop.
+En tablet, prueba la orientación horizontal: aparece «Gira la tableta» y se pausa el loop.
 Al cambiar de pestaña durante la pantalla de juego y regresar, vuelve a la portada.
 Tras 30 s de inactividad en cualquier pantalla excepto la portada, aparece el
 aviso con 5…1; a los 35 s regresa a la portada. Tocar el aviso cancela el retorno.

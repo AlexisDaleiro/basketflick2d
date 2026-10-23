@@ -5,7 +5,7 @@ import { IdleWatcher } from './core/IdleWatcher.js';
 import { StateMachine } from './core/StateMachine.js';
 import { es } from './i18n/es.js';
 import { InputManager } from './input/InputManager.js';
-import { Kiosk } from './kiosk/Kiosk.js';
+import { Kiosk, shouldBlockOrientation } from './kiosk/Kiosk.js';
 import { Renderer } from './render/Renderer.js';
 import { IdleWarning } from './ui/IdleWarning.js';
 import { SkeletonScreen } from './ui/SkeletonScreen.js';
@@ -35,8 +35,9 @@ const renderer = new Renderer(document.querySelector('#game'));
 const bus = new EventBus();
 const debug = new URLSearchParams(location.search).get('debug') === '1';
 const development = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname) || debug;
+const desktopPreview = development && matchMedia('(pointer: fine)').matches && !matchMedia('(pointer: coarse)').matches;
 let hidden = document.hidden;
-let landscape = window.innerWidth > window.innerHeight;
+let landscape = shouldBlockOrientation(window.innerWidth, window.innerHeight, desktopPreview);
 let interruptedPlaying = false;
 let warningVisible = false;
 let previousFocus = null;
@@ -104,6 +105,7 @@ function handleVisibility(nextHidden) {
 }
 
 const kiosk = new Kiosk({
+  desktopPreview,
   onVisibility: handleVisibility,
   onOrientation: nextLandscape => { landscape = nextLandscape; reconcile(); },
 });

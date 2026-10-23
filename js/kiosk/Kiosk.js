@@ -1,10 +1,16 @@
 import { isNativeControl } from '../input/InputManager.js';
 
+/** Desktop development keeps the portrait world centered without blocking wide windows. @param {number} width CSS px. @param {number} height CSS px. @param {boolean} desktopPreview @returns {boolean} */
+export function shouldBlockOrientation(width, height, desktopPreview) {
+  return !desktopPreview && width > height;
+}
+
 export class Kiosk {
-  /** @param {{onVisibility: (hidden: boolean) => void, onOrientation: (landscape: boolean) => void}} options */
-  constructor({ onVisibility, onOrientation }) {
+  /** @param {{onVisibility: (hidden: boolean) => void, onOrientation: (landscape: boolean) => void, desktopPreview?: boolean}} options */
+  constructor({ onVisibility, onOrientation, desktopPreview = false }) {
     this.onVisibility = onVisibility;
     this.onOrientation = onOrientation;
+    this.desktopPreview = desktopPreview;
     this.wakeLock = null;
     this.wakePending = false;
     this.activated = false;
@@ -52,6 +58,7 @@ export class Kiosk {
 
   /** @returns {Promise<void>} */
   async enterFullscreen() {
+    if (this.desktopPreview) return;
     try { await document.documentElement.requestFullscreen?.(); } catch { /* Optional browser capability. */ }
     try { await screen.orientation?.lock?.('portrait'); } catch { /* Optional browser capability. */ }
   }
@@ -82,7 +89,7 @@ export class Kiosk {
 
   /** @returns {void} */
   checkOrientation() {
-    const landscape = window.innerWidth > window.innerHeight;
+    const landscape = shouldBlockOrientation(window.innerWidth, window.innerHeight, this.desktopPreview);
     if (landscape === this.landscape) return;
     this.landscape = landscape;
     this.onOrientation(landscape);
