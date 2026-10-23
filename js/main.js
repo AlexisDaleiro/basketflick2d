@@ -10,8 +10,9 @@ import { Renderer } from './render/Renderer.js';
 import { IdleWarning } from './ui/IdleWarning.js';
 import { SkeletonScreen } from './ui/SkeletonScreen.js';
 import { h, show } from './ui/dom.js';
-import { PhysicsLab } from './game/PhysicsLab.js';
-import { PhysicsScreen } from './ui/PhysicsScreen.js';
+import { Round } from './game/Round.js';
+import { PlayingScreen } from './ui/PlayingScreen.js';
+import { Sfx } from './audio/Sfx.js';
 
 const app = document.querySelector('#app');
 const screens = document.querySelector('#screens');
@@ -42,18 +43,24 @@ let interruptedPlaying = false;
 let warningVisible = false;
 let previousFocus = null;
 const states = {};
-const lab = new PhysicsLab({ debug, onContact: event => bus.emit(event.type, event) });
+const sfx = new Sfx();
+sfx.attach(document);
+const round = new Round({ debug, onEvent: event => {
+  if (event.type === 'sfx:rim' || event.type === 'sfx:board') bus.emit(event.type, event);
+  bus.emit('round:event', event);
+} });
 let debugOverlay = null;
+let sceneTime = 0;
 for (const name of Object.values(STATES)) {
   states[name] = name === STATES.PLAYING
-    ? new PhysicsScreen({ root: screens, lab, navigate: next => machine.transition(next) })
+    ? new PlayingScreen({ root: screens, round, bus, sfx, navigate: (next, payload) => machine.transition(next, payload) })
     : new SkeletonScreen({ name, root: screens, navigate: next => machine.transition(next) });
 }
 const machine = new StateMachine({ states, bus, development });
 const loop = new GameLoop({
-  update: dt => machine.update(dt),
+  update: dt => { sceneTime += dt; machine.update(dt); },
   render: () => {
-    renderer.begin(); machine.render(renderer.ctx);
+    renderer.begin(sceneTime); machine.render(renderer.ctx);
     if (debugOverlay) { debugOverlay.render(renderer.ctx); debugOverlay.frame(performance.now()); }
   },
 });
@@ -88,8 +95,8 @@ function reconcile() {
   screens.inert = landscape || warningVisible;
   warningRoot.inert = landscape;
   input.setEnabled(!hidden && !landscape && !warningVisible);
-  if (hidden || landscape) { loop.stop(); debugOverlay?.pause(); }
-  else loop.start();
+  if (hidden || landscape) { loop.stop(); debugOverlay?.pause(); sfx.pause(); }
+  else { loop.start(); sfx.resume(); }
 }
 
 /** @param {boolean} nextHidden @returns {void} */
@@ -137,8 +144,8 @@ reconcile();
 if (debug) {
   import('./debug/DebugOverlay.js').then(({ DebugOverlay }) => {
     if (signal.aborted) return;
-    debugOverlay = new DebugOverlay({ root: app, lab, machine, loop });
-    window.__TB2D_DEBUG__ = Object.freeze({ machine, loop, input, idle, renderer, lab });
+    debugOverlay = new DebugOverlay({ root: app, round, machine, loop });
+    window.__TB2D_DEBUG__ = Object.freeze({ machine, loop, input, idle, renderer, round, lab: round, sfx });
   });
 }
 
@@ -154,5 +161,6 @@ window.addEventListener('pagehide', event => {
   renderer.destroy();
   debugOverlay?.destroy();
   kiosk.destroy();
+  sfx.destroy();
   if (debug) delete window.__TB2D_DEBUG__;
 }, { signal });

@@ -21,6 +21,7 @@ export class World {
     this.timeMs = 0;
     this.activeCount = 0;
     this.movingHoop = false;
+    this.hoopTimeMs = null;
   }
 
   /** @param {number} x u. @param {number} y u. @returns {Ball | null} */
@@ -38,12 +39,13 @@ export class World {
     this.activeCount = 0;
     this.movingHoop = false;
     this.hoop.reset();
+    this.hoopTimeMs = null;
   }
 
   /** One fixed semi-implicit Euler step; no per-step allocations. @returns {void} */
   step() {
     this.timeMs += FIXED_DT * MS_PER_SECOND;
-    this.hoop.update(this.timeMs, this.movingHoop);
+    this.hoop.update(this.hoopTimeMs ?? this.timeMs, this.movingHoop);
     for (const ball of this.balls) {
       if (ball.state !== 'flying' && ball.state !== 'dead') continue;
       ball.previous.copy(ball.position);

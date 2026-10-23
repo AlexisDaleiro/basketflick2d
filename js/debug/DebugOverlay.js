@@ -6,9 +6,9 @@ import { h } from '../ui/dom.js';
 
 /** Constructed exclusively with ?debug=1. */
 export class DebugOverlay {
-  /** @param {{root:HTMLElement, lab:import('../game/PhysicsLab.js').PhysicsLab, machine:import('../core/StateMachine.js').StateMachine, loop:import('../core/GameLoop.js').GameLoop}} options */
-  constructor({ root, lab, machine, loop }) {
-    this.lab = lab;
+  /** @param {{root:HTMLElement, round:import('../game/Round.js').Round, machine:import('../core/StateMachine.js').StateMachine, loop:import('../core/GameLoop.js').GameLoop}} options */
+  constructor({ root, round, machine, loop }) {
+    this.round = round;
     this.machine = machine;
     this.loop = loop;
     this.element = h('pre', 'debug-overlay');
@@ -21,7 +21,7 @@ export class DebugOverlay {
     this.controller = new AbortController();
     document.addEventListener('keydown', event => {
       if (isNativeControl(event.target) || event.repeat || event.ctrlKey || event.metaKey || event.altKey) return;
-      if (event.key.toLowerCase() === 'r' && machine.current === STATES.PLAYING) lab.reset();
+      if (event.key.toLowerCase() === 'r' && machine.current === STATES.PLAYING) round.reset();
       if (event.key.toLowerCase() === 'a') machine.transition(STATES.ADMIN_PANEL);
     }, { signal: this.controller.signal });
   }
@@ -32,9 +32,9 @@ export class DebugOverlay {
     this.previousTime = now;
     this.frames++;
     if (this.elapsed < DEBUG_REFRESH_MS) return;
-    const result = this.lab.tracker.result;
+    const result = this.round.tracker.result;
     this.element.textContent = es.debugMetrics(
-      Math.round(this.frames * MS_PER_SECOND / this.elapsed), this.loop.steps, this.lab.world.activeCount,
+      Math.round(this.frames * MS_PER_SECOND / this.elapsed), this.loop.steps, this.round.world.activeCount,
       result, Math.round(result.angle / DEG_TO_RAD),
     );
     this.elapsed = 0;
@@ -47,7 +47,7 @@ export class DebugOverlay {
   /** @param {CanvasRenderingContext2D} ctx @returns {void} */
   render(ctx) {
     if (this.machine.current !== STATES.PLAYING) return;
-    const hoop = this.lab.world.hoop;
+    const hoop = this.round.world.hoop;
     ctx.save();
     ctx.strokeStyle = theme.yellow;
     ctx.lineWidth = DEBUG_LINE_WIDTH;
@@ -67,9 +67,9 @@ export class DebugOverlay {
     ctx.fillStyle = theme.red; ctx.fillText(es.gateB, hoop.front.x, hoop.gateBY + DEBUG_LABEL_MARGIN * 2);
     ctx.fillStyle = theme.yellow;
     ctx.beginPath();
-    for (let point = 0; point < this.lab.predictionCount; point++) {
-      const x = this.lab.prediction[point * 2];
-      const y = this.lab.prediction[point * 2 + 1];
+    for (let point = 0; point < this.round.predictionCount; point++) {
+      const x = this.round.prediction[point * 2];
+      const y = this.round.prediction[point * 2 + 1];
       ctx.moveTo(x + DEBUG_POINT_RADIUS, y); ctx.arc(x, y, DEBUG_POINT_RADIUS, 0, Math.PI * 2);
     }
     ctx.fill();

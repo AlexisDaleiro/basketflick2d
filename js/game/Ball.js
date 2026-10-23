@@ -21,6 +21,7 @@ export class Ball {
     this.outcome = '';
     this.points = 0;
     this.swish = false;
+    this.spawnedAt = 0;
   }
 
   /** Reset all shot data before reuse. @param {number} x u. @param {number} y u. @returns {void} */
@@ -30,6 +31,7 @@ export class Ball {
     this.velocity.set(0, 0);
     this.state = 'ready';
     this.opacity = 1;
+    this.spawnedAt = 0;
     this.angle = 0;
     this.touchedRim = false;
     this.touchedBoard = false;

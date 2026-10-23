@@ -1,5 +1,6 @@
 import { MAX_DPR, WORLD_BORDER_WIDTH, WORLD_HEIGHT, WORLD_WIDTH } from '../config/constants.js';
 import { theme } from '../config/theme.js';
+import { drawBackground } from './draw/background.js';
 
 export class Renderer {
   /** @param {HTMLCanvasElement} canvas */
@@ -11,6 +12,7 @@ export class Renderer {
     this.offsetY = 0;
     this.left = 0;
     this.top = 0;
+    this.bounds = { minX: 0, maxX: WORLD_WIDTH, minY: 0, maxY: WORLD_HEIGHT };
     this.resize = this.resize.bind(this);
     this.controller = new AbortController();
     window.addEventListener('resize', this.resize, { signal: this.controller.signal });
@@ -31,6 +33,15 @@ export class Renderer {
     this.scale = Math.min(this.width / WORLD_WIDTH, this.height / WORLD_HEIGHT);
     this.offsetX = (this.width - WORLD_WIDTH * this.scale) / 2;
     this.offsetY = (this.height - WORLD_HEIGHT * this.scale) / 2;
+    this.bounds.minX = -this.offsetX / this.scale;
+    this.bounds.maxX = (this.width - this.offsetX) / this.scale;
+    this.bounds.minY = -this.offsetY / this.scale;
+    this.bounds.maxY = (this.height - this.offsetY) / this.scale;
+    const style = this.canvas.parentElement.style;
+    style.setProperty('--world-left', `${this.offsetX}px`);
+    style.setProperty('--world-top', `${this.offsetY}px`);
+    style.setProperty('--world-width', `${WORLD_WIDTH * this.scale}px`);
+    style.setProperty('--world-height', `${WORLD_HEIGHT * this.scale}px`);
     this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     this.background = this.ctx.createLinearGradient(0, 0, this.width, this.height);
     this.background.addColorStop(0, theme.navy2);
@@ -43,14 +54,15 @@ export class Renderer {
     out.y = (y - this.top - this.offsetY) / this.scale;
   }
 
-  /** Draw the entire viewport, then enter the logical world transform. @returns {void} */
-  begin() {
+  /** Draw the entire viewport, then enter the logical world transform. @param {number} [time] s. @returns {void} */
+  begin(time = 0) {
     const ctx = this.ctx;
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     ctx.fillStyle = this.background;
     ctx.fillRect(0, 0, this.width, this.height);
     ctx.translate(this.offsetX, this.offsetY);
     ctx.scale(this.scale, this.scale);
+    drawBackground(ctx, time, this.bounds);
     ctx.strokeStyle = theme.navy2;
     ctx.lineWidth = WORLD_BORDER_WIDTH;
     ctx.strokeRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);

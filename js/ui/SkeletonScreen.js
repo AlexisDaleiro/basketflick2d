@@ -28,8 +28,9 @@ export class SkeletonScreen {
       ? es.playingDescription : name === STATES.GAME_OVER ? es.overDescription : es.adminDescription;
     this.actions = h('div', 'actions');
     this.inputStatus = h('p', 'input-status', es.inputReady);
+    this.description = h('p', 'description', description);
     this.panel.append(this.badge, brand, h('p', 'brand-caption', es.brand), this.heading,
-      h('p', 'description', description), this.actions);
+      this.description, this.actions);
     if (name === STATES.PLAYING) this.panel.append(this.inputStatus);
     this.buttons = [];
     if (name === STATES.ATTRACT_MODE) this.addAction(es.start, STATES.PLAYING, 'primary');
@@ -56,6 +57,7 @@ export class SkeletonScreen {
   enter(payload) {
     this.elapsed = 0;
     this.inputStatus.textContent = es.inputReady;
+    if (this.name === STATES.GAME_OVER) this.description.textContent = payload ? es.roundSummary(payload) : es.overDescription;
     this.controller = new AbortController();
     for (const action of this.buttons) {
       action.button.addEventListener('click', () => this.navigate(action.destination), { signal: this.controller.signal });

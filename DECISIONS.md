@@ -148,3 +148,86 @@ pendientes de H6; no se han ejecutado ni se dan por aprobadas en H1.
 - Se inspeccionaron capturas verticales del modo normal y debug en `.artifacts/`
   (artefactos locales ignorados por Git). Quedan pendientes las pruebas físicas
   en Android/iPad y el soak de H6; no se presentan como ejecutados.
+
+## Alcance H3
+
+- `Round` es un controlador puro, sin DOM: countdown → live → buzzer → complete.
+  Los pasos y deadlines se cuentan en ticks enteros de 1/240 s para evitar
+  acumulación de error en 700/450/1200/2500 ms. El World sigue usando su tiempo
+  de simulación para la física, los tiros, el fade y las animaciones de spawn.
+- Countdown muestra 3, 2, 1, ¡YA! durante 700 ms cada uno. No descuenta tiempo
+  de los 45 s y bloquea todos los lanzamientos. Se admiten 30/45/60 s mediante
+  settings; el panel persistente de configuración pertenece a H5.
+- Primera pelota en (360, 1380); las siguientes eligen x entre 200 y 520 u al
+  cumplir 450 ms desde el lanzamiento, siempre con menos de tres tiros vivos.
+  Si no hay capacidad de vuelo o pool libre, el spawn espera al primer tick con
+  capacidad, sin reducir los 450 ms. Los seis objetos de Ball se reutilizan.
+- Los resultados se cuentan en orden de resolución de World; dos resoluciones
+  en el mismo tick mantienen el orden determinista del pool. La tercera canasta
+  consecutiva ya recibe +1; un fallo corta la racha inmediatamente.
+- Se resuelve la ambigüedad del buzzer de §3.7/§4.4 mostrando ¡TIEMPO! al menos
+  1,2 s. Aunque no quede ningún tiro, se conserva ese aviso antes del resumen;
+  si quedan tiros se espera hasta resolverlos o hasta 2,5 s desde cero. Los tiros
+  que aún no se resolvieron al deadline se marcan fallo sin más puntaje. No se
+  crean pelotas ni se aceptan swipes durante buzzer. El botón de finalizar prueba
+  de H2 deja de formar parte del recorrido de juego.
+- El aro móvil se activa suavemente desde offset 0 en los últimos diez segundos,
+  usando tiempo relativo al inicio de la oscilación. Continúa durante buzzer;
+  tablero, puntas y compuertas conservan el movimiento cinemático de H2.
+- `PlayingScreen` consume eventos de la ronda y se encarga de sonido, vibración,
+  partículas, resorte de la red y HUD, sin mezclar estas APIs con el scoring.
+  Sus listeners y la suscripción al bus se retiran al salir. Abrir admin, idle,
+  ocultar/volver o salir aborta la ronda y libera su pool sin producir resultados.
+- Canvas dibuja fondo extendido (incluido letterbox), patrón de huellas, luces,
+  cancha, tablero, aro trasero, pelotas, red trapezoidal con resorte, aro delantero,
+  partículas e indicadores superiores. El HUD DOM es la última capa y se alinea
+  al mismo rectángulo lógico que Canvas; el logo mide al menos 96 × 96 CSS px.
+- El logo del HUD conserva el acceso explícito de prueba al admin para mantener
+  el recorrido aprobado de H1/H2. El disparador secreto y su anillo siguen en H5.
+  Como botón nativo, no inicia flicks ni consume las muestras de una pelota.
+- Las partículas se preasignan en un pool de 200; se descarta emisión si está
+  lleno. Cada canasta emite 12–18 huellas. La racha añade llamas cada 50 ms por
+  pelota en vuelo; el primer fallo las deja extinguirse con su vida de 300 ms.
+  El módulo también sabe dibujar confeti de huesos para las pantallas de H4.
+- HUD actualiza strings solo al cambiar un valor o producirse un evento. Usa
+  tres huellas para la racha, +puntos flotantes, bump de score, últimos cinco
+  segundos rojos a 1 Hz, countdown y una mano SVG a los tres segundos sin tiro.
+  Ninguna animación visual de pulso parpadea por encima de 3 Hz.
+- `Sfx` crea AudioContext al primer gesto; resume un contexto desbloqueado al
+  volver de una pausa. Ruido blanco procedural compartido, master 0,6, ocho slots
+  de voz y desconexión de fuentes terminadas. Los AudioScheduledSourceNode son
+  necesariamente de un solo uso: se crean por evento de audio, nunca por frame.
+  Swish, aro, tablero, beep/¡YA!, tics, buzzer y ladrido no usan archivos externos.
+  Ausencia/denegación de Web Audio no interrumpe la ronda; un resume rechazado
+  puede reintentarse con otro gesto. soundEnabled se aplica al entrar/reiniciar.
+- Se conserva la excepción de escritorio aprobada: en localhost/debug con mouse
+  no se fuerza fullscreen ni se bloquea por ventana horizontal. Tablet mantiene
+  orientación vertical, pausa y las restricciones de gestos.
+- La pantalla GAME_OVER del esqueleto recibe un resumen de score, tiros,
+  canastas, acierto, swishes y mejor racha para que H3 quede ejecutable. Conteo
+  animado, ranking, premios, leads y Storage se implementan en H4; no se simulan
+  ni se guardan resultados todavía. La portada sigue sin DemoPlayer hasta H4.
+- PhysicsLab/PhysicsScreen y sus tests de H2 se conservan como harness independiente;
+  ya no se cargan en el recorrido normal. Debug usa Round y R reinicia countdown.
+
+## Verificación H3 · 23/10/2026
+
+- `npm test`: 66 tests aprobados, incluidos los 50 de los hitos anteriores.
+- Comprobación de sintaxis de todos los módulos con `node --check` y diff sin
+  errores de whitespace.
+- Navegador integrado: recorrido de entrada 3/¡YA!/live, lanzamiento real con
+  mouse que produjo +3, spawn siguiente en x aleatorio y ronda completa de 45 s
+  con resultado «3 PUNTOS · 1/1 canastas · 100% de acierto · 1 swishes · Mejor
+  racha: 1». Consola sin errores ni warnings durante las pruebas.
+- Se verificó el modo debug, FPS/pasos/pelotas, R que vuelve a 3 y 45 s, A que
+  descarta la ronda, retorno a cero pelotas y diez ciclos jugar → admin → salir
+  sin acumular pantallas ni errores. El HUD se inspeccionó visualmente con cancha,
+  pelota, aro, red y logo, manteniendo libre el área de tiro.
+- Tests nuevos: duraciones y countdown, respawn, límite de vuelo, scoring y orden
+  de racha, scoring posterior al cero, límites mínimo/máximo del buzzer, cancelación,
+  movimiento suave y continuidad en buzzer, pools de partículas y voces, efectos
+  Web Audio y degradación sin API. El audio se valida con un contexto simulado
+  y con ausencia de errores de Web Audio en navegador; la calidad auditiva final,
+  vibración y rendimiento sostenido en tablet requieren prueba física.
+- El soak de ocho horas, 200 rondas en dispositivos reales, offline/PWA y los
+  criterios de hardening siguen pendientes de H6; no se consideran aprobados aquí.
