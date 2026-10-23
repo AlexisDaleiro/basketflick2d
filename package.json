@@ -1,0 +1,10 @@
+{
+  "name": "threeball2d",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node tools/serve.js",
+    "test": "node --test"
+  }
+}
