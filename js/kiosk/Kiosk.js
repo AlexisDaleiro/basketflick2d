@@ -1,22 +1,14 @@
 import { isNativeControl } from '../input/InputManager.js';
 
-/** Desktop development keeps the portrait world centered without blocking wide windows. @param {number} width CSS px. @param {number} height CSS px. @param {boolean} desktopPreview @returns {boolean} */
-export function shouldBlockOrientation(width, height, desktopPreview) {
-  return !desktopPreview && width > height;
-}
-
 export class Kiosk {
-  /** @param {{onVisibility: (hidden: boolean) => void, onOrientation: (landscape: boolean) => void, desktopPreview?: boolean}} options */
-  constructor({ onVisibility, onOrientation, desktopPreview = false }) {
+  /** @param {{onVisibility: (hidden: boolean) => void, desktopPreview?: boolean}} options */
+  constructor({ onVisibility, desktopPreview = false }) {
     this.onVisibility = onVisibility;
-    this.onOrientation = onOrientation;
     this.desktopPreview = desktopPreview;
     this.wakeLock = null;
     this.wakePending = false;
     this.activated = false;
     this.controller = null;
-    this.landscape = null;
-    this.checkOrientation = this.checkOrientation.bind(this);
     this.handleVisibility = this.handleVisibility.bind(this);
     this.activate = this.activate.bind(this);
     this.blockGesture = this.blockGesture.bind(this);
@@ -35,11 +27,8 @@ export class Kiosk {
     document.addEventListener('pointerdown', this.activate, { capture: true, passive: true, signal });
     document.addEventListener('keydown', this.activate, { capture: true, signal });
     document.addEventListener('visibilitychange', this.handleVisibility, { signal });
-    window.addEventListener('resize', this.checkOrientation, { signal });
-    window.visualViewport?.addEventListener('resize', this.checkOrientation, { signal });
     window.addEventListener('popstate', this.handleBack, { signal });
     history.pushState({ kiosk: true }, '', location.href);
-    this.checkOrientation();
   }
 
   /** @param {Event} event @returns {void} */
@@ -60,7 +49,6 @@ export class Kiosk {
   async enterFullscreen() {
     if (this.desktopPreview) return;
     try { await document.documentElement.requestFullscreen?.(); } catch { /* Optional browser capability. */ }
-    try { await screen.orientation?.lock?.('portrait'); } catch { /* Optional browser capability. */ }
   }
 
   /** @returns {Promise<void>} */
@@ -85,14 +73,6 @@ export class Kiosk {
   handleVisibility() {
     this.onVisibility(document.hidden);
     if (!document.hidden && this.activated) this.acquireWakeLock();
-  }
-
-  /** @returns {void} */
-  checkOrientation() {
-    const landscape = shouldBlockOrientation(window.innerWidth, window.innerHeight, this.desktopPreview);
-    if (landscape === this.landscape) return;
-    this.landscape = landscape;
-    this.onOrientation(landscape);
   }
 
   /** @returns {void} */

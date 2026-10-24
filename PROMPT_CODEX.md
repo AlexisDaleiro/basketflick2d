@@ -18,7 +18,7 @@
 |---|---|
 | Nombre | **ThreeBall 2D** |
 | Marca | **Three Dogs by Districo**: estilo canino moderno, divertido, enérgico y profesional |
-| Plataforma | Tableta táctil en **orientación vertical**, PWA en modo kiosk (Chrome Android / Safari iPadOS, pantalla completa) |
+| Plataforma | Tableta táctil en **cualquier orientación**, PWA en modo kiosk (Chrome Android / Safari iPadOS, pantalla completa). Mouse también habilitado en producción. |
 | Core loop | "Basketball Flick 2D": el jugador desliza el dedo desde la pelota hacia el aro y la suelta para lanzarla. Partidas de 30/45/60 s (por defecto 45 s) |
 | Entorno | Stand de convención: **100 % offline** después de la primera carga. Cero CDNs, cero fuentes remotas, cero APIs externas |
 | Objetivo de negocio | Atraer público al stand, entregar premios por puntaje y **capturar leads** (nombre + teléfono) exportables a Excel |
@@ -47,7 +47,7 @@ Implementa todo lo siguiente sin excepción:
 - Listeners de `touchstart`, `touchmove` y `touchend`/`touchcancel` registrados con `{ passive: false }` y `preventDefault()` en canvas y overlays (salvo dentro de inputs, sliders y botones nativos, donde no debe romperse el foco).
 - Bloquear `gesturestart`, `gesturechange`, `gestureend` (pinch de Safari), `contextmenu`, `dblclick` y `selectstart`.
 - **Un solo dedo activo**: guarda el `identifier` del primer toque y descarta los demás hasta su `touchend`.
-- Fallback con mouse **solo para desarrollo en escritorio**. Ignora los eventos de mouse emulados que siguen a un toque (marca de tiempo del último toque < 800 ms ⇒ descartar).
+- Entrada con mouse en desarrollo y producción cuando hay puntero preciso. Ignora los eventos de mouse emulados que siguen a un toque (marca de tiempo del último toque < 800 ms ⇒ descartar).
 - Usa `event.timeStamp` (base `performance.now()`) para medir el tiempo del swipe, nunca `Date.now()`.
 
 ### 1.4 Reglas de calidad de código
@@ -78,7 +78,7 @@ Implementa todo lo siguiente sin excepción:
 /js/core/StateMachine.js
 /js/core/GameLoop.js          # rAF + paso fijo con acumulador
 /js/core/IdleWatcher.js
-/js/kiosk/Kiosk.js            # wake lock, fullscreen, bloqueo de gestos, orientación
+/js/kiosk/Kiosk.js            # wake lock, fullscreen y bloqueo de gestos; sin bloqueo de orientación
 /js/input/InputManager.js     # touch/mouse unificado, un solo dedo
 /js/input/FlickTracker.js     # muestras del swipe ⇒ vector de lanzamiento (puro)
 /js/physics/Vec2.js
@@ -128,7 +128,8 @@ Implementa todo lo siguiente sin excepción:
 - **Mundo lógico fijo de gameplay: 1080 × 1600 u** (u = unidad de mundo), con el eje Y hacia abajo. Toda la física y las constantes están en unidades de mundo, así el juego es **idéntico en cualquier tableta** (justo para el umbral de premio).
 - Transformación: `scale = min(canvasCssW / 1080, canvasCssH / 1600)`; el rectángulo de gameplay se centra. El fondo decorativo se extiende más allá para cubrir el letterbox (nunca bandas negras).
 - Conversión de pantalla a mundo: `wx = (sx - offsetX) / scale`, `wy = (sy - offsetY) / scale`.
-- En orientación horizontal se muestra un overlay a pantalla completa: "Gira la tableta" (ícono SVG animado), y el juego se pausa.
+- Por petición del usuario (23/10/2026), no hay bloqueo ni aviso de orientación:
+  el juego funciona en vertical y horizontal, con la cancha centrada y escalada.
 
 ### 2.4 Máquina de estados
 Estados de primer nivel (exactamente estos cuatro):
@@ -494,11 +495,11 @@ Reglas:
 
 ## 7. Kiosk, PWA y offline
 
-- `manifest.webmanifest`: `display: "fullscreen"` (con `display_override: ["fullscreen", "standalone"]`), `orientation: "portrait"`, `background_color` y `theme_color` navy, e íconos SVG (`any` y `maskable`) más los PNG generados con `tools/make-icons.html`. Incluye `apple-touch-icon` y `apple-mobile-web-app-capable`.
+- `manifest.webmanifest`: `display: "fullscreen"` (con `display_override: ["fullscreen", "standalone"]`), `orientation: "any"`, `background_color` y `theme_color` navy, e íconos SVG (`any` y `maskable`) más los PNG generados con `tools/make-icons.html`. Incluye `apple-touch-icon` y `apple-mobile-web-app-capable`.
 - `sw.js`: cache versionado `tb2d-v<APP_VERSION>`. Precachea **la lista explícita de todos los archivos** (genera esa lista a mano en `sw.js` y agrega un test que verifique que cada archivo de `/js`, `/css` e `/icons` está en la lista). Estrategia cache-first; elimina los caches viejos en `activate`. Sin `skipWaiting` automático (lo dispara el admin).
 - `Kiosk.js`:
   - **Wake Lock** (`navigator.wakeLock.request('screen')`), readquirido en `visibilitychange`.
-  - `requestFullscreen()` en el primer gesto, y `screen.orientation.lock('portrait')` dentro de `try/catch`.
+  - `requestFullscreen()` en el primer gesto, dentro de `try/catch`, sin bloquear la orientación.
   - Bloqueo de gestos (§1.3) y del botón "atrás" de Android: `history.pushState` + `popstate` para que no salga de la app.
 - **README**, con secciones obligatorias:
   1. Correr en local (`npm run dev`).

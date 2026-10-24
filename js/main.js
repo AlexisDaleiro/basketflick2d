@@ -5,40 +5,27 @@ import { IdleWatcher } from './core/IdleWatcher.js';
 import { StateMachine } from './core/StateMachine.js';
 import { es } from './i18n/es.js';
 import { InputManager } from './input/InputManager.js';
-import { Kiosk, shouldBlockOrientation } from './kiosk/Kiosk.js';
+import { Kiosk } from './kiosk/Kiosk.js';
 import { Renderer } from './render/Renderer.js';
 import { IdleWarning } from './ui/IdleWarning.js';
 import { SkeletonScreen } from './ui/SkeletonScreen.js';
-import { h, show } from './ui/dom.js';
 import { Round } from './game/Round.js';
 import { PlayingScreen } from './ui/PlayingScreen.js';
 import { Sfx } from './audio/Sfx.js';
 
 const app = document.querySelector('#app');
 const screens = document.querySelector('#screens');
-const orientation = document.querySelector('#orientation');
 const warningRoot = document.querySelector('#idle-warning');
 const lifetime = new AbortController();
 const signal = lifetime.signal;
 document.title = es.title;
-const rotateCard = h('div', 'modal-card');
-const rotateIcon = new DOMParser().parseFromString(
-  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" aria-hidden="true"><rect x="24" y="8" width="52" height="84" rx="9" fill="none" stroke="currentColor" stroke-width="6"/><path d="M42 80h16" stroke="currentColor" stroke-width="6"/></svg>',
-  'image/svg+xml',
-).documentElement;
-const rotateTitle = h('h2', '', es.rotate);
-rotateTitle.id = 'orientation-title';
-orientation.setAttribute('aria-labelledby', rotateTitle.id);
-rotateCard.append(rotateIcon, rotateTitle, h('p', 'description', es.rotateDescription));
-orientation.append(rotateCard);
 
 const renderer = new Renderer(document.querySelector('#game'));
 const bus = new EventBus();
 const debug = new URLSearchParams(location.search).get('debug') === '1';
 const development = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname) || debug;
-const desktopPreview = development && matchMedia('(pointer: fine)').matches && !matchMedia('(pointer: coarse)').matches;
+const desktopPreview = matchMedia('(pointer: fine)').matches && !matchMedia('(pointer: coarse)').matches;
 let hidden = document.hidden;
-let landscape = shouldBlockOrientation(window.innerWidth, window.innerHeight, desktopPreview);
 let interruptedPlaying = false;
 let warningVisible = false;
 let previousFocus = null;
@@ -68,7 +55,7 @@ const input = new InputManager({
   surface: app,
   toWorld: (x, y, out) => renderer.toWorld(x, y, out),
   onInput: event => machine.onInput(event),
-  mouseEnabled: development && matchMedia('(any-pointer: fine)').matches,
+  mouseEnabled: matchMedia('(any-pointer: fine)').matches,
 });
 const warning = new IdleWarning(warningRoot);
 const idle = new IdleWatcher({
@@ -91,11 +78,9 @@ const idle = new IdleWatcher({
 
 /** Apply pause reasons together so one resume event cannot override another. @returns {void} */
 function reconcile() {
-  show(orientation, landscape);
-  screens.inert = landscape || warningVisible;
-  warningRoot.inert = landscape;
-  input.setEnabled(!hidden && !landscape && !warningVisible);
-  if (hidden || landscape) { loop.stop(); debugOverlay?.pause(); sfx.pause(); }
+  screens.inert = warningVisible;
+  input.setEnabled(!hidden && !warningVisible);
+  if (hidden) { loop.stop(); debugOverlay?.pause(); sfx.pause(); }
   else { loop.start(); sfx.resume(); }
 }
 
@@ -114,13 +99,12 @@ function handleVisibility(nextHidden) {
 const kiosk = new Kiosk({
   desktopPreview,
   onVisibility: handleVisibility,
-  onOrientation: nextLandscape => { landscape = nextLandscape; reconcile(); },
 });
 
 // Consume the wake-up gesture before it can activate a control underneath the modal.
 for (const type of ['touchstart', 'pointerdown', 'keydown']) {
   document.addEventListener(type, event => {
-    if (!warningVisible || landscape) return;
+    if (!warningVisible) return;
     if (event.cancelable) event.preventDefault();
     event.stopImmediatePropagation();
     idle.reset();

@@ -1,19 +1,34 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Kiosk, shouldBlockOrientation } from '../js/kiosk/Kiosk.js';
+import { Kiosk } from '../js/kiosk/Kiosk.js';
 
-test('Desktop preview stays playable after widening or maximizing the browser', () => {
-  assert.equal(shouldBlockOrientation(500, 900, true), false);
-  assert.equal(shouldBlockOrientation(1920, 1080, true), false);
+function browserGlobal(t, name, value) {
+  const descriptor = Object.getOwnPropertyDescriptor(globalThis, name);
+  Object.defineProperty(globalThis, name, { configurable: true, value });
+  t.after(() => {
+    if (descriptor) Object.defineProperty(globalThis, name, descriptor);
+    else delete globalThis[name];
+  });
+}
+
+test('Tablet fullscreen does not force portrait orientation', async t => {
+  let fullscreenRequests = 0; let orientationRequests = 0;
+  browserGlobal(t, 'document', { documentElement: { requestFullscreen: async () => { fullscreenRequests++; } } });
+  browserGlobal(t, 'screen', { orientation: { lock: async () => { orientationRequests++; } } });
+  const kiosk = new Kiosk({ onVisibility: () => {} });
+  await kiosk.enterFullscreen();
+  assert.equal(fullscreenRequests, 1);
+  assert.equal(orientationRequests, 0);
 });
 
-test('Tablet kiosk still blocks landscape and resumes in portrait', () => {
-  assert.equal(shouldBlockOrientation(1024, 768, false), true);
-  assert.equal(shouldBlockOrientation(768, 1024, false), false);
+test('Denied fullscreen never interrupts entry to the game', async t => {
+  browserGlobal(t, 'document', { documentElement: { requestFullscreen: async () => { throw new Error('Denied'); } } });
+  const kiosk = new Kiosk({ onVisibility: () => {} });
+  await assert.doesNotReject(kiosk.enterFullscreen());
 });
 
 test('Desktop preview does not request fullscreen or lock the monitor orientation', async () => {
-  const kiosk = new Kiosk({ desktopPreview: true, onVisibility: () => {}, onOrientation: () => {} });
+  const kiosk = new Kiosk({ desktopPreview: true, onVisibility: () => {} });
   // No browser globals exist in Node: requesting either capability would fail.
   await assert.doesNotReject(kiosk.enterFullscreen());
 });

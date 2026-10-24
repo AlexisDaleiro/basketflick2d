@@ -15,8 +15,6 @@ export const es = Object.freeze({
   adminTitle: 'Administración',
   adminDescription: 'Vista de navegación de H1. El acceso secreto, el PIN y la configuración llegan en H5.',
   exit: 'Salir',
-  rotate: 'Gira la tableta',
-  rotateDescription: 'Usa la pantalla en vertical para continuar.',
   idle: '¿Sigues ahí? Toca la pantalla para continuar',
   continue: 'CONTINUAR',
   inputReady: 'Toca o arrastra sobre el fondo para probar la entrada.',

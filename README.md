@@ -12,7 +12,7 @@ npm test
 
 Abre http://127.0.0.1:5173. En escritorio local con mouse puedes usar cualquier
 tamaño de ventana: el mundo vertical se centra y no se pide pantalla completa
-automáticamente. En tablet o emulación táctil usa orientación **vertical**.
+automáticamente. En tablet funciona tanto en **vertical como en horizontal**.
 No hace falta instalar paquetes. También puede servirse la
 carpeta con cualquier servidor estático.
 
@@ -57,14 +57,14 @@ Al llegar a cero se impiden nuevos lanzamientos y se muestra «¡TIEMPO!» al me
 En los últimos cinco segundos el cronómetro pulsa en rojo y emite tics. Si no
 lanzas en los primeros tres segundos, una mano SVG muestra el gesto.
 
-En tablet, prueba la orientación horizontal: aparece «Gira la tableta» y se pausa el loop.
+Girar la tablet no muestra avisos ni pausa la ronda; la cancha se centra y escala.
 Al cambiar de pestaña durante la pantalla de juego y regresar, vuelve a la portada.
 Tras 30 s de inactividad en cualquier pantalla excepto la portada, aparece el
 aviso con 5…1; a los 35 s regresa a la portada. Tocar el aviso cancela el retorno.
 
 El primer gesto solicita pantalla completa y Wake Lock, si el navegador los
 permite. Para salir de pantalla completa en escritorio usa Esc. El mouse funciona
-en localhost (o con `?debug=1`) si hay un puntero preciso. `?debug=1` expone
+tanto en localhost como en el sitio publicado si hay un puntero preciso. `?debug=1` expone
 `window.__TB2D_DEBUG__` para inspeccionar la infraestructura, `round` y `sfx`.
 
 ## Diagnóstico

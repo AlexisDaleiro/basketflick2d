@@ -289,3 +289,19 @@ del tiro se debe terminar en tableta con el nuevo POV.
   oclusión, swish con caída visible, reciclaje y tiro débil fallado. En navegador,
   un gesto fuerte recto desde el primer spawn sumó 2 puntos; consola sin errores
   ni warnings. La sensación y el audio en una tablet física siguen pendientes.
+
+## Eliminación del bloqueo de orientación · 23/10/2026
+
+- Por petición explícita del usuario tras publicar en Vercel, se eliminan el
+  modal de giro, la pausa y deshabilitación de entrada por orientación, sus
+  listeners y el lock de pantalla vertical. El renderer existente centra y
+  escala la cancha al cambiar el tamaño, sin detener la ronda.
+- La entrada con mouse y la omisión de fullscreen en escritorio dejan de
+  depender de localhost/debug; así el sitio publicado también es jugable con
+  mouse. El filtrado de mouse emulado tras touch sigue vigente.
+- El layout compacto para ventanas bajas también aplica en horizontal. La
+  especificación y las instrucciones de PWA futuras usan orientación libre.
+- Verificación: 80 tests aprobados, incluyendo fullscreen sin lock de orientación
+  y entrada tolerante al rechazo de fullscreen. Arranque y cuenta regresiva en
+  navegador local sin errores ni warnings. El despliegue de Vercel necesita
+  actualizarse con este commit; no se ha publicado desde esta sesión.
