@@ -9,8 +9,11 @@ export function calculateFrontalLaunch(swipe, origin, settings, out) {
   const speed = Math.max(C.V_MIN, Math.min(Math.hypot(rawX, rawY), C.V_MAX));
   out.angle = Math.max(C.MIN_LAUNCH_ANGLE, Math.min(Math.atan2(-rawY, rawX), C.MAX_LAUNCH_ANGLE));
   out.clamped.x = speed * Math.cos(out.angle); out.clamped.y = -speed * Math.sin(out.angle);
-  out.velocity.x = out.clamped.x; out.velocity.y = out.clamped.y * C.FRONTAL_LIFT_GAIN;
-  out.depthVelocity = -out.clamped.y * C.FRONTAL_DEPTH_GAIN;
+  const power = -out.clamped.y;
+  const effectivePower = power <= C.FRONTAL_POWER_SOFT_START ? power
+    : C.FRONTAL_POWER_SOFT_START + (power - C.FRONTAL_POWER_SOFT_START) * C.FRONTAL_POWER_SOFT_GAIN;
+  out.velocity.x = out.clamped.x; out.velocity.y = -effectivePower * C.FRONTAL_LIFT_GAIN;
+  out.depthVelocity = effectivePower * C.FRONTAL_DEPTH_GAIN;
   const discriminant = out.velocity.y ** 2 - 2 * C.G * (origin.y - C.FRONTAL_RIM_Y);
   if (discriminant >= 0) {
     const time = (-out.velocity.y + Math.sqrt(discriminant)) / C.G;

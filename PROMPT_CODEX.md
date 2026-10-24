@@ -597,8 +597,11 @@ de marca, sin imágenes, WebGL ni dependencias de runtime.
   El radio visible también se multiplica por scale. La pelota se reduce al
   acercarse al aro y se agranda si rebota hacia la cámara.
 - Se mantiene la captura de swipe de §3.2 y sus rechazos. Tras GAIN, sensibilidad
-  y clamps de magnitud/ángulo: `vx = vx_clamped`,
-  `vy = 0.82 * vy_clamped`, `vz = -0.55 * vy_clamped`.
+  y clamps de magnitud/ángulo: `power = -vy_clamped`; hasta 2700 u/s se
+  conserva, y por encima se usa `effectivePower = 2700 + (power-2700)*0.25`.
+  Luego `vx = vx_clamped`, `vy = -0.82 * effectivePower`,
+  `vz = 0.55 * effectivePower`. Esta compresión del extremo fuerte permite
+  tiros al tablero con gestos rápidos, manteniendo los tiros cortos y el control lateral.
   La asistencia interpola solo vx hacia el centro del aro usando la raíz
   descendente a y=820, sin corregir profundidad. La potencia importa: un tiro
   corto o pasado puede fallar aunque se alinee con el aro en pantalla.
@@ -614,7 +617,12 @@ de marca, sin imágenes, WebGL ni dependencias de runtime.
   Fallo por piso, timeout de 4 s, x fuera de límites o z fuera de [−800,2800].
 - Render: tablero frontal, aro proyectado, red, pelotas ordenadas por profundidad,
   sombra en el piso, partículas proyectadas y HUD. Las pelotas que están delante
-  del aro ocluyen la red. El debug muestra las compuertas proyectadas, trayectoria
+  del aro ocluyen la red; las que están completamente detrás del tablero se
+  dibujan antes de este. El aro usa la misma proyección circular que el collider.
+  Los contactos de tablero/aro muestran un destello breve. Tras confirmar una
+  canasta física, la pelota cae por la red durante 450 ms y se desvanece hasta
+  los 600 ms: es una animación posterior al resultado, sin nuevos contactos ni puntos.
+  El debug muestra las compuertas proyectadas, trayectoria
   frontal y velocidad de profundidad.
 - Se mantienen countdown, cronómetro, puntuación, racha, buzzer, audio, kiosk e
   inactividad de H3. Los módulos laterales puros de H2 quedan como harness y

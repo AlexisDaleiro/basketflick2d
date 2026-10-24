@@ -82,6 +82,7 @@ export class FrontalWorld extends World {
     this.hoop.update(this.hoopTimeMs ?? this.timeMs, this.movingHoop);
     for (const ball of this.balls) {
       if (ball.state !== 'flying' && ball.state !== 'dead') continue;
+      if (ball.state === 'dead' && ball.outcome === 'basket') { this.animateBasket(ball); continue; }
       ball.previous.copy(ball.position); ball.previousDepth = ball.depth;
       ball.velocity.y += this.gravity * C.FIXED_DT; ball.velocity.scale(this.dragFactor); ball.depthVelocity *= this.dragFactor;
       ball.position.x += ball.velocity.x * C.FIXED_DT; ball.position.y += ball.velocity.y * C.FIXED_DT;
@@ -93,8 +94,29 @@ export class FrontalWorld extends World {
         ball.touchedFloor = true; this.contact.nx = 0; this.contact.ny = -1; this.contact.nz = 0; this.contact.penetration = penetration;
         this.resolveSphere(ball, 'floor');
       }
-      if (this.judge.evaluate(ball, this.hoop, this.timeMs)) this.onResolve?.(ball);
+      if (this.judge.evaluate(ball, this.hoop, this.timeMs)) {
+        if (ball.outcome === 'basket') {
+          ball.basketStartX = ball.position.x; ball.basketStartY = ball.position.y; ball.basketStartDepth = ball.depth;
+        }
+        this.onResolve?.(ball);
+      }
       if (ball.state === 'dead') { ball.fade(this.timeMs); if (ball.state === 'inactive') this.activeCount--; }
     }
+  }
+
+  /** Scoring is already final: visually settle into and drop through the net before fading. @param {import('../game/Ball.js').Ball} ball @returns {void} */
+  animateBasket(ball) {
+    const age = this.timeMs - ball.resolvedAt;
+    const progress = Math.min(1, age / C.FRONTAL_BASKET_DROP_MS);
+    const ease = progress * progress * (3 - 2 * progress);
+    ball.previous.copy(ball.position); ball.previousDepth = ball.depth;
+    ball.position.x = ball.basketStartX + (this.hoop.centerX - ball.basketStartX) * ease;
+    const exitY = this.hoop.rimY + C.FRONTAL_NET_DEPTH + ball.radius * C.FRONTAL_BASKET_EXIT_RADIUS;
+    ball.position.y = ball.basketStartY + (exitY - ball.basketStartY) * progress;
+    ball.depth = ball.basketStartDepth + (this.hoop.depth - ball.basketStartDepth) * ease;
+    ball.angle += C.FIXED_DT * Math.PI;
+    ball.opacity = age <= C.FRONTAL_BASKET_DROP_MS ? 1
+      : Math.max(0, (C.DEAD_FADE_MS - age) / (C.DEAD_FADE_MS - C.FRONTAL_BASKET_DROP_MS));
+    if (age >= C.DEAD_FADE_MS) { ball.state = 'inactive'; this.activeCount--; }
   }
 }

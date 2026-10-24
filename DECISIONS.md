@@ -269,3 +269,23 @@ de coincidencia de pantalla a profundidad errónea, gates y reciclaje. En el
 navegador integrado se inspeccionó la vista y un tiro real de potencia media
 marcó 2 puntos, sin errores ni warnings de consola. La calibración de sensación
 del tiro se debe terminar en tableta con el nuevo POV.
+
+## Corrección de rebotes y lectura de canastas · 23/10/2026
+
+- Los gestos fuertes alcanzaban el máximo de potencia y podían pasar por encima
+  del tablero. Al bajar por detrás, el dibujo de la pelota quedaba delante del
+  panel y parecía atravesarlo. Ahora la oclusión respeta la profundidad del
+  tablero, y el aro se dibuja con la misma proyección circular que su collider.
+- Se comprime la potencia vertical superior a 2700 u/s con factor 0,25 antes de
+  calcular vy/vz. Un gesto fuerte centrado ahora puede rebotar físicamente en el
+  tablero y encestar; los tiros débiles o desviados siguen fallando. No se otorgan
+  puntos por mera coincidencia de pantalla.
+- Se añadió feedback breve de contacto y una caída por la red de 450 ms después
+  de que el juez confirma la canasta. La pelota permanece opaca durante la caída
+  y desaparece al completar 600 ms. Esa animación no altera el resultado, no
+  produce nuevos contactos ni vuelve a puntuar; mantiene el pool existente.
+- Verificación: 80 tests aprobados, incluidos rebote con inversión de velocidad
+  hacia la cámara, crecimiento aparente, tiro fuerte que encesta tras contacto,
+  oclusión, swish con caída visible, reciclaje y tiro débil fallado. En navegador,
+  un gesto fuerte recto desde el primer spawn sumó 2 puntos; consola sin errores
+  ni warnings. La sensación y el audio en una tablet física siguen pendientes.

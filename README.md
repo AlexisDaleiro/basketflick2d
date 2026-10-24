@@ -33,17 +33,22 @@ Un toque corto o un gesto descendente no lanza y muestra
 «¡Desliza hacia el aro!». Desde el primer spawn centrado, un ejemplo de tiro es
 mover 180 u recto hacia arriba en 60 ms: vx≈0, vy≈−2214 y vz≈1485 u/s.
 No es necesario acertar esos valores exactos para lanzar. Desde spawns laterales
-inclina ligeramente el gesto hacia el centro. Prueba primero una potencia media;
-un swipe muy largo y rápido puede pasar de largo.
+inclina ligeramente el gesto hacia el centro. Prueba primero una potencia media.
+El extremo fuerte del gesto se comprime para facilitar tiros al tablero;
+los tiros cortos o desviados siguen fallando.
 
-La pelota rebota en aro, tablero y piso. Una canasta suma **+2**, un swish **+3**.
+La pelota rebota en aro, tablero y piso. Un contacto de aro/tablero muestra un
+destello; al rebotar hacia la cámara, la pelota vuelve a crecer. Una canasta
+confirmada muestra la pelota cayendo por la red durante 450 ms, movimiento de
+la red, mensaje y puntos. Una canasta suma **+2**, un swish **+3**.
 Desde la tercera canasta consecutiva cada una suma **+1 extra**, con medidor,
 estela de llamas y ladrido procedural; un fallo corta la racha. Los tiros se
 puntúan en el orden en que se resuelven.
 
 Una nueva pelota aparece 450 ms después de lanzar, en una posición aleatoria
 entre 380 y 700 u, mientras haya menos de tres en vuelo y un hueco en el pool.
-Las pelotas resueltas siguen moviéndose y se desvanecen durante 600 ms. El pool
+Las pelotas falladas siguen su física y se desvanecen durante 600 ms; las
+encestadas completan la caída visual y luego se desvanecen hasta los 600 ms. El pool
 tiene seis pelotas y el de partículas doscientas; no crecen con las rondas.
 
 Al llegar a cero se impiden nuevos lanzamientos y se muestra «¡TIEMPO!» al menos

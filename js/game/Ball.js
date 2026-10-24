@@ -24,6 +24,7 @@ export class Ball {
     this.spawnedAt = 0;
     this.depth = 0; this.previousDepth = 0; this.depthVelocity = 0;
     this.grabRadius = null;
+    this.basketStartX = 0; this.basketStartY = 0; this.basketStartDepth = 0;
   }
 
   /** Reset all shot data before reuse. @param {number} x u. @param {number} y u. @returns {void} */

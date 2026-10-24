@@ -192,6 +192,14 @@ export const FRONTAL_COURT_FRONT_WIDTH = 1320; // u, projected screen coordinate
 export const FRONTAL_BOARD_SHADOW = 16; // u, projected screen coordinate
 export const FRONTAL_RIM_PERSPECTIVE = 0.2; // ellipse height/width
 export const FRONTAL_RING_SEGMENTS = 32; // line segments per projected ring
+export const FRONTAL_POWER_SOFT_START = 2700; // u/s, beginning of upper power compression
+export const FRONTAL_POWER_SOFT_GAIN = 0.25; // multiplier above the soft start
+export const FRONTAL_BASKET_DROP_MS = 450; // ms, visible net transit after confirmation
+export const FRONTAL_BASKET_EXIT_RADIUS = 1.5; // ball radii below the net
+export const BOARD_IMPACT_MS = 220; // ms
+export const RIM_IMPACT_MS = 180; // ms
+export const IMPACT_RING_RADIUS = 44; // u, projected screen
+export const IMPACT_LINE_WIDTH = 7; // u, projected screen
 export const STATES = Object.freeze({
   ATTRACT_MODE: 'ATTRACT_MODE',
   PLAYING: 'PLAYING',

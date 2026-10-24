@@ -27,14 +27,19 @@ export function drawBoard(ctx, hoop) {
 
 /** @param {CanvasRenderingContext2D} ctx @param {import('../../game/FrontalHoop.js').FrontalHoop} hoop @param {boolean} front @returns {void} */
 export function drawRim(ctx, hoop, front) {
-  const scale = depthScale(hoop.depth);
-  const y = C.FRONTAL_HORIZON_Y + (hoop.rimY - C.FRONTAL_HORIZON_Y) * scale;
-  const radius = hoop.radius * scale;
-  ctx.save(); ctx.lineWidth = C.RIM_LINE_WIDTH; ctx.lineCap = 'round';
+  ctx.save(); ctx.lineWidth = C.FRONTAL_RIM_TUBE_RADIUS * 2 * depthScale(hoop.depth); ctx.lineCap = 'round';
   ctx.strokeStyle = front ? theme.orange : theme.yellow;
-  ctx.beginPath(); ctx.ellipse(C.FRONTAL_CENTER_X, y,
-    radius, radius * C.FRONTAL_RIM_PERSPECTIVE, 0,
-    front ? 0 : Math.PI, front ? Math.PI : Math.PI * 2); ctx.stroke();
+  ctx.beginPath();
+  const halfSegments = C.FRONTAL_RING_SEGMENTS / 2;
+  for (let segment = 0; segment <= halfSegments; segment++) {
+    const angle = (front ? 0 : Math.PI) + segment / halfSegments * Math.PI;
+    const depth = hoop.depth - Math.sin(angle) * hoop.radius;
+    const scale = depthScale(depth);
+    const x = C.FRONTAL_CENTER_X + Math.cos(angle) * hoop.radius * scale;
+    const y = C.FRONTAL_HORIZON_Y + (hoop.rimY - C.FRONTAL_HORIZON_Y) * scale;
+    if (segment === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
   ctx.restore();
 }
 

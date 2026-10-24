@@ -7,6 +7,8 @@ import { Hud } from './Hud.js';
 import { h, show } from './dom.js';
 import { projectPoint } from '../render/projection.js';
 import { Vec2 } from '../physics/Vec2.js';
+import { ballLayer } from '../render/visibility.js';
+import { theme } from '../config/theme.js';
 
 export class PlayingScreen {
   /** @param {{root:HTMLElement,round:import('../game/Round.js').Round,bus:import('../core/EventBus.js').EventBus,sfx:import('../audio/Sfx.js').Sfx,navigate:(name:string,payload?:any)=>void}} options */
@@ -17,6 +19,8 @@ export class PlayingScreen {
     this.hud = new Hud(this.panel); this.particles = new Particles();
     this.effectOrigin = new Vec2();
     this.renderOrder = round.world.balls.slice();
+    this.boardImpact = new Vec2(); this.rimImpact = new Vec2();
+    this.boardImpactAt = -Infinity; this.rimImpactAt = -Infinity;
     this.netStretch = 0; this.netVelocity = 0; this.trailElapsed = 0; this.misses = 0;
     this.controller = null; this.unsubscribe = null;
     this.handleEvent = this.handleEvent.bind(this);
@@ -48,6 +52,7 @@ export class PlayingScreen {
     this.sfx.play(event.type, event.value);
     if (event.type === 'countdown' && event.value === 0) {
       this.hud.reset(); this.particles.clear(); this.netStretch = 0; this.netVelocity = 0; this.misses = 0;
+      this.boardImpactAt = -Infinity; this.rimImpactAt = -Infinity;
     } else if (event.type === 'basket') {
       const hoop = this.round.world.hoop;
       projectPoint(hoop.centerX, hoop.gateBY, hoop.depth, this.effectOrigin);
@@ -61,6 +66,14 @@ export class PlayingScreen {
       this.misses++;
       if (this.misses % C.MISS_FEEDBACK_INTERVAL === 0) this.hud.message(es.miss, now);
     } else if (event.type === 'rejected') this.hud.message(es.rejectedFlick, now);
+    else if (event.type === 'sfx:board' || event.type === 'sfx:rim') {
+      const contact = this.round.world.contact; const ball = event.ball;
+      const point = event.type === 'sfx:board' ? this.boardImpact : this.rimImpact;
+      projectPoint(ball.position.x - contact.nx * ball.radius, ball.position.y - contact.ny * ball.radius,
+        ball.depth - contact.nz * ball.radius, point);
+      if (event.type === 'sfx:board') this.boardImpactAt = now;
+      else this.rimImpactAt = now;
+    }
   }
 
   /** @param {number} dt s. @returns {void} */
@@ -92,14 +105,25 @@ export class PlayingScreen {
       this.renderOrder[j + 1] = ball;
     }
     for (const ball of this.renderOrder) drawBallShadow(ctx, ball);
+    for (const ball of this.renderOrder) if (ballLayer(ball, world.hoop) === 'behind-board') drawBall(ctx, ball, world.timeMs);
     drawBoard(ctx, world.hoop); drawRim(ctx, world.hoop, false);
-    for (const ball of this.renderOrder) if (ball.depth >= world.hoop.depth - ball.radius) drawBall(ctx, ball, world.timeMs);
+    this.drawImpact(ctx, this.boardImpact, this.boardImpactAt, C.BOARD_IMPACT_MS);
+    for (const ball of this.renderOrder) if (ballLayer(ball, world.hoop) === 'inside-hoop') drawBall(ctx, ball, world.timeMs);
     drawNet(ctx, world.hoop, this.netStretch); drawRim(ctx, world.hoop, true);
     // Balls between the camera and the hoop occlude the net, rather than crossing behind it.
-    for (const ball of this.renderOrder) if (ball.depth < world.hoop.depth - ball.radius) drawBall(ctx, ball, world.timeMs);
+    for (const ball of this.renderOrder) if (ballLayer(ball, world.hoop) === 'foreground') drawBall(ctx, ball, world.timeMs);
+    this.drawImpact(ctx, this.rimImpact, this.rimImpactAt, C.RIM_IMPACT_MS);
     this.particles.render(ctx);
     for (const ball of world.balls) drawBallIndicator(ctx, ball);
     this.hud.update(this.round);
+  }
+
+  /** @param {CanvasRenderingContext2D} ctx @param {{x:number,y:number}} point @param {number} at ms. @param {number} duration ms. @returns {void} */
+  drawImpact(ctx, point, at, duration) {
+    const progress = (this.round.world.timeMs - at) / duration;
+    if (progress < 0 || progress >= 1) return;
+    ctx.save(); ctx.globalAlpha = 1 - progress; ctx.strokeStyle = theme.teal; ctx.lineWidth = C.IMPACT_LINE_WIDTH;
+    ctx.beginPath(); ctx.arc(point.x, point.y, C.IMPACT_RING_RADIUS * (0.5 + progress), 0, Math.PI * 2); ctx.stroke(); ctx.restore();
   }
 
   /** @param {{type:string,x:number,y:number,t:number}} event @returns {void} */
