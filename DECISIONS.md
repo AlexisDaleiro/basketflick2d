@@ -305,3 +305,57 @@ del tiro se debe terminar en tableta con el nuevo POV.
   y entrada tolerante al rechazo de fullscreen. Arranque y cuenta regresiva en
   navegador local sin errores ni warnings. El despliegue de Vercel necesita
   actualizarse con este commit; no se ha publicado desde esta sesión.
+
+## H4 — Portada, resultados, premios, leads y almacenamiento · 23/10/2026
+
+- Se reemplazan las pantallas provisionales de portada y resultados sin cambiar
+  las cuatro transiciones ni la física de H3. La demo es silenciosa y usa
+  FrontalWorld, lanzamiento frontal y los mismos dibujos y capas. Tiene su pool
+  fijo de seis pelotas, separado del de Round, reseteado al salir; solo uno de
+  esos mundos se actualiza a la vez. No genera partidas, premios ni sonido.
+- Portada: demo cada 2,2 s con ±6 % de ruido, título animado, pelota SVG giratoria,
+  marca, récord y Top 5 rotativo cada 4 s. El título no contiene la letra «O»:
+  se usa una pelota ornamental entre ThreeBall y 2D en lugar de alterar el nombre.
+  Se actualizan récord y disponibilidad al volver y al cambiar el día local.
+- ResultSession copia y guarda el resultado anónimo al entrar a GAME_OVER, antes
+  del formulario. Resultado y lead comparten id; salir por idle, admin o Saltar
+  no elimina la partida. Cuenta el score en 900 ms y agradece durante 2,5 s
+  antes de ir a la portada o iniciar otra ronda según el botón usado.
+- Premio con score >= 24, stock diario inicial ilimitado, códigos TD-XXXX sin
+  duplicados en el almacén y fallback determinista si el RNG repite valores.
+  El ranking ordena score desc., tiros asc. y fecha asc.; el reset no afecta
+  ganadores. «Nuevo récord» exige superar el score anterior, o ser el primero.
+- El nombre es opcional (no hay obligatoriedad en la especificación); se recorta
+  a 24 caracteres. El filtro editable compara palabras normalizadas para la
+  presentación pública; guarda el nombre original para CSV futuro. Todo dato
+  del usuario entra al DOM mediante textContent, nunca markup.
+- Teléfono móvil uruguayo normalizado a E.164; consentimiento obligatorio solo
+  con teléfono. Errores inline, labels y aria-describedby/aria-invalid. No se
+  transmiten leads a servicios externos. El formulario admite scroll interno,
+  excepción necesaria al bloqueo global para pantallas bajas/teclado. Usa
+  visualViewport para altura/offset y fija el CTA encima del teclado.
+- Storage recibe el backend del navegador desde bootstrap, encapsula todas las
+  lecturas/escrituras y sigue en memoria ante denegación/cuota. El aviso aparece
+  en resultado y admin y permanece durante la sesión. Calcula bytes UTF-16 de
+  las claves tb2d.*, con aviso a partir de 4 MiB. Se pide persistencia al iniciar.
+- La migración v0→v1 completa campos ausentes (H1–H3 no tenían schema persistido),
+  valida resultados, conserva registros válidos, respalda JSON/colecciones
+  corruptas, repara defaults y recupera el contador desde ids. Una versión
+  posterior no se sobrescribe. El ring de errores queda limitado a 50 registros.
+  pinHash/pinSalt se inicializan vacíos como datos reservados; su creación y uso
+  pertenecen a H5, que todavía conserva el acceso temporal aprobado al admin.
+- No se implementan en H4 CSV, PIN/panel completo, PWA ni el manejador global de
+  errores/hardening de H6. Se conserva la orientación libre solicitada antes.
+
+Verificación: 95 tests aprobados; incluye día local a las 22:30 de Uruguay en un
+subproceso con TZ explícita, ranking/reset, cuota y denegación, JSON corrupto,
+migración, códigos únicos con RNG constante, consentimiento y destinos/tiempos.
+La demo sostuvo 60 s simulados conservando el pool y encestando con el juez real.
+En navegador local se completó una ronda de 45 s con un tiro que sumó 2, se
+guardó «Prueba H4» sin teléfono, se vio el agradecimiento y se confirmó récord
+y nombre en portada tras recargar. Se rechazó teléfono inválido inline.
+La fixture aislada tests/h4-preview.html mostró premio de 26 puntos, código,
+rechazo por falta de consentimiento, normalización de teléfono ficticio,
+guardado sin duplicar y destino PLAYING; también mostró el aviso de backend
+denegado. Consola sin errores/warnings. El teclado real y el tacto prolongado
+en Android/iPad deben verificarse en dispositivo; no se simulan como aprobados.

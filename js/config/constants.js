@@ -200,6 +200,24 @@ export const BOARD_IMPACT_MS = 220; // ms
 export const RIM_IMPACT_MS = 180; // ms
 export const IMPACT_RING_RADIUS = 44; // u, projected screen
 export const IMPACT_LINE_WIDTH = 7; // u, projected screen
+export const DEMO_INTERVAL_MS = 2200; // ms
+export const DEMO_POWER = 2700; // u/s, calibrated frontal swish
+export const DEMO_NOISE = 0.06; // relative launch noise
+export const TICKER_MS = 4000; // ms
+export const SCORE_COUNT_MS = 900; // ms
+export const THANKS_MS = 2500; // ms
+export const PRIZE_THRESHOLD = 24; // points
+export const LEAD_NAME_MAX = 24; // characters
+export const ERROR_LIMIT = 50; // records
+export const STORAGE_WARNING_BYTES = 4 * 1024 * 1024; // bytes
+export const STORAGE_PREFIX = 'tb2d.v1.';
+export const SCHEMA_VERSION = 1; // version
+export const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+export const CODE_LENGTH = 4; // characters
+export const OFFENSIVE_WORDS = Object.freeze(['mierda', 'puta', 'puto', 'carajo']); // editable basic word filter
+export const RESULT_CONFETTI_X = WORLD_WIDTH / 2; // u
+export const RESULT_CONFETTI_Y = 430; // u
+export const KEYBOARD_HEIGHT_DELTA = 120; // CSS px, visual viewport shrink before docking submit
 export const STATES = Object.freeze({
   ATTRACT_MODE: 'ATTRACT_MODE',
   PLAYING: 'PLAYING',

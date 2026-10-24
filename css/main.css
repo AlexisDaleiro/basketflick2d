@@ -115,3 +115,45 @@ button:focus-visible { outline: 4px solid var(--c-teal); outline-offset: 3px; }
   h1 { font-size: 32px; }
   .actions { gap: 8px; }
 }
+.screen-brand { position: absolute; right: max(12px, env(safe-area-inset-right)); top: max(12px, env(safe-area-inset-top)); width: 96px; height: 96px; padding: 8px; background: var(--c-navy-2); color: var(--c-yellow); z-index: 2; }
+.screen-brand svg { width: 100%; display: block; }
+.attract-screen { position: absolute; inset: 0; text-align: center; }
+.attract-heading { position: absolute; top: max(24px, env(safe-area-inset-top)); left: 16px; right: 120px; }
+.attract-title { font-size: clamp(32px, 7vw, 68px); animation: title-bounce 2.4s ease-in-out infinite; }
+.title-ball { display: inline-block; width: .65em; height: .65em; margin: 0 .12em; color: var(--c-orange); vertical-align: baseline; animation: title-spin 8s linear infinite; }
+.title-ball svg { display: block; width: 100%; }
+@keyframes title-spin { to { transform: rotate(360deg); } }
+.attract-actions { position: absolute; bottom: max(24px, env(safe-area-inset-bottom)); left: 8%; right: 8%; display: grid; gap: 10px; justify-items: center; }
+.record-card { margin: 0; padding: 12px 20px; color: var(--c-navy); background: var(--c-yellow); border: 4px solid var(--c-navy); border-radius: 18px; font-size: clamp(16px, 3vw, 26px); animation: record-pulse 2.4s ease-in-out infinite; }
+.prize-invitation, .top-ticker { margin: 0; padding: 6px 12px; background: var(--c-navy); border-radius: 12px; font-size: clamp(12px, 2vw, 18px); }
+.prize-invitation { color: var(--c-yellow); }
+.top-ticker:empty { display: none; }
+.attract-cta { width: 100%; position: relative; animation: cta-pulse 1.2s ease-in-out infinite; }
+.attract-cta::after { content: ''; position: absolute; inset: -5px; border: 3px solid var(--c-orange); border-radius: inherit; animation: cta-wave 1.2s ease-out infinite; pointer-events: none; }
+@keyframes cta-pulse { 50% { transform: scale(1.06); } }
+@keyframes cta-wave { to { transform: scale(1.12); opacity: 0; } }
+@keyframes title-bounce { 50% { transform: scale(1.04); } }
+@keyframes record-pulse { 50% { filter: brightness(1.12); } }
+.result-screen { position: absolute; inset: 0; pointer-events: auto; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; background: rgb(15 27 61 / 20%); }
+.result-screen * { touch-action: pan-y; }
+.result-screen input, .result-screen button { touch-action: manipulation; }
+.result-content { max-width: 700px; margin: auto; padding: max(28px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(28px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left)); display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+.result-content h1 { font-size: clamp(30px, 6vw, 54px); padding: 0 88px; }
+.final-score { font-size: clamp(64px, 13vw, 100px); line-height: 1; color: var(--c-yellow); }
+.result-rank { margin: 0; color: var(--c-teal); }
+.prize-card { width: 100%; padding: 14px; background: var(--c-yellow); color: var(--c-navy); border: 4px solid var(--c-navy); border-radius: 24px; box-shadow: 5px 6px 0 var(--c-navy-2); }
+.prize-card p { margin: 8px 0 0; }
+.prize-code { display: block; font-size: clamp(36px, 8vw, 60px); letter-spacing: .1em; }
+.lead-form { width: 100%; display: grid; gap: 10px; text-align: left; }
+.lead-form h2 { font-size: clamp(20px, 4vw, 28px); text-align: center; margin: 8px 0; }
+.lead-form input:not([type=checkbox]) { width: 100%; min-height: 64px; padding: 12px 16px; border-radius: 16px; border: 3px solid var(--c-teal); background: var(--c-white); color: var(--c-navy); font: inherit; font-size: 20px; }
+.consent-label { display: flex; align-items: center; gap: 12px; min-height: 88px; font-size: 14px; font-weight: 600; line-height: 1.4; }
+.consent-label input { width: 32px; height: 32px; flex: 0 0 32px; accent-color: var(--c-orange); }
+.lead-actions { display: grid; gap: 10px; padding-bottom: 8px; }
+.lead-actions .primary { position: sticky; bottom: 8px; }
+.keyboard-open .save-replay { position: fixed; bottom: calc(var(--keyboard-bottom) + 12px); left: 50%; transform: translateX(-50%); width: min(calc(100% - 40px), 660px); z-index: 3; }
+.keyboard-open .result-content { padding-bottom: 112px; }
+.form-error { color: var(--c-yellow); font-size: 15px; margin: 0; }
+.form-error:empty, .storage-notice:empty { display: none; }
+.storage-notice { color: var(--c-yellow); font-size: 14px; font-weight: 600; padding: 10px; border: 2px solid var(--c-orange); border-radius: 12px; }
+.thanks { color: var(--c-teal); padding: 30px 0; }

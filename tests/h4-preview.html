@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>H4 · Prueba visual con datos ficticios</title>
+<link rel="stylesheet" href="../css/main.css">
+<body><main id="app"><canvas id="game"></canvas><div id="screens" class="overlay"></div></main>
+<script type="module">
+  // Isolated visual fixture: never accesses localStorage or records a real prize.
+  import { Storage } from '../js/storage/Storage.js';
+  import { GameOverScreen } from '../js/ui/GameOverScreen.js';
+  import { Renderer } from '../js/render/Renderer.js';
+  import { GameLoop } from '../js/core/GameLoop.js';
+  import { h } from '../js/ui/dom.js';
+  const items = new Map();
+  const backend = new URLSearchParams(location.search).has('denied') ? null : {
+    getItem: key => items.get(key) ?? null,
+    setItem: (key, value) => items.set(key, value),
+    get length() { return items.size; }, key: index => [...items.keys()][index],
+  };
+  const storage = new Storage({ backend }).load();
+  const root = document.querySelector('#screens');
+  const renderer = new Renderer(document.querySelector('#game'));
+  const screen = new GameOverScreen({ root, storage, navigate: state => {
+    screen.exit();
+    const panel = h('section', 'screen');
+    panel.append(h('h1', '', state), h('p', 'description', `Registros: ${storage.plays.length} · Nombre: ${storage.plays[0].name || 'anónimo'} · Teléfono normalizado: ${storage.plays[0].phone || 'vacío'}`));
+    root.append(panel); loop.stop();
+  } });
+  const loop = new GameLoop({ update: dt => screen.update(dt), render: () => { renderer.begin(); screen.render(renderer.ctx); } });
+  screen.enter({ score: 26, shots: 12, baskets: 10, swishes: 3, bestStreak: 5, durationSec: 45 });
+  loop.start();
+  addEventListener('pagehide', () => { screen.exit(); loop.stop(); renderer.destroy(); }, { once: true });
+</script>
+</body></html>

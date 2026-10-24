@@ -1,4 +1,4 @@
-# ThreeBall 2D · H3 + POV frontal
+# ThreeBall 2D · H4 + POV frontal
 
 Ronda jugable en HTML, CSS y JavaScript ES2020, sin bundler ni dependencias.
 Requiere Node.js 20 o posterior para las herramientas locales.
@@ -17,12 +17,42 @@ No hace falta instalar paquetes. También puede servirse la
 carpeta con cualquier servidor estático.
 
 Recorrido: «¡TOCA AQUÍ PARA JUGAR!» → 3, 2, 1, ¡YA! → ronda de **45 s** →
-«¡TIEMPO!» → resumen con puntaje y estadísticas → «JUGAR DE NUEVO» o «Saltar».
+«¡TIEMPO!» → resumen con puntaje, estadísticas y formulario → «GUARDAR Y JUGAR
+DE NUEVO», «GUARDAR» o «Saltar».
 Cada paso de la cuenta dura 700 ms; la pelota se ve pero no puede lanzarse hasta
 terminar «¡YA!». El logo de la esquina superior derecha abre la vista de admin
 de prueba; «Salir» vuelve a la portada. Entrar al admin descarta la ronda.
-El acceso secreto/PIN llegará en H5. Premios, leads y guardado de partidas llegan
-en H4: los resultados de H3 solo se conservan mientras los ves.
+El acceso secreto/PIN y la exportación CSV llegarán en H5.
+
+La portada muestra una demo silenciosa con tiros cada 2,2 s, el récord diario,
+la invitación al premio y un ticker del Top 5 cada 4 s. El resultado se guarda
+**inmediatamente al terminar la ronda**, antes de llenar el formulario. «Saltar»
+o dejar vencer el idle conserva la partida anónima. Al guardar el nombre se
+actualiza ese mismo registro, sin duplicarlo; el agradecimiento dura 2,5 s.
+
+El teléfono es opcional. Acepta `098123456`, `98123456`, `+59898123456` o
+`59898123456`, con espacios o guiones, y lo guarda como `+59898123456`.
+Para guardar teléfono se exige el consentimiento; los errores aparecen inline.
+El nombre admite hasta 24 caracteres y puede quedar vacío (jugador anónimo).
+El filtro de nombres del ranking está en `OFFENSIVE_WORDS`; conserva el original
+en el registro para la futura exportación.
+
+Con **24 puntos o más** se gana un premio y se muestra un código `TD-XXXX`.
+El límite diario inicial es ilimitado; el control del límite y el umbral en UI
+llegan en H5. El conteo de ganadores es independiente del reinicio del ranking.
+Los empates no muestran «nuevo récord»; el primer registro sí lo muestra.
+
+Los datos permanecen **en este navegador y origen**, con claves `tb2d.v1.*`.
+Localhost y Vercel tienen almacenes separados. Si el navegador bloquea el
+almacenamiento o se llena, la sesión sigue en memoria con aviso visible en el
+resultado y en admin; no se promete conservarla tras recargar. Se pide persistencia
+al navegador sin bloquear la entrada. El formulario admite desplazamiento interno
+y ajusta su altura y botón primario al teclado mediante `visualViewport`.
+
+Para inspección visual sin completar una ronda ni generar premios reales, abre
+`/tests/h4-preview.html`: usa datos ficticios y almacenamiento **solo en memoria**.
+Con `?denied=1` simula almacenamiento bloqueado. Permite probar cartel/código,
+validación, consentimiento y destinos tras guardar; no modifica tus partidas.
 
 En la ronda verás el **tablero de frente y el aro centrado**, con la pelota grande
 en primer plano y la cancha en perspectiva. Desliza **desde la pelota hacia arriba**
@@ -65,7 +95,7 @@ aviso con 5…1; a los 35 s regresa a la portada. Tocar el aviso cancela el reto
 El primer gesto solicita pantalla completa y Wake Lock, si el navegador los
 permite. Para salir de pantalla completa en escritorio usa Esc. El mouse funciona
 tanto en localhost como en el sitio publicado si hay un puntero preciso. `?debug=1` expone
-`window.__TB2D_DEBUG__` para inspeccionar la infraestructura, `round` y `sfx`.
+`window.__TB2D_DEBUG__` para inspeccionar la infraestructura, `round`, `sfx` y `storage`.
 
 ## Diagnóstico
 
@@ -95,7 +125,7 @@ En debug puedes cambiar, por ejemplo,
 
 La carpeta puede publicarse en GitHub Pages o Netlify sin compilación.
 HTTPS será necesario para Service Worker, Wake Lock y `crypto.subtle`.
-H3 todavía **no implementa instalación PWA ni funcionamiento offline**; llegan en H6.
+H4 todavía **no implementa instalación PWA ni funcionamiento offline**; llegan en H6.
 
 ## Instalar como PWA (a partir de H6)
 
@@ -111,7 +141,7 @@ El bloqueo de gestos de la página no reemplaza estos controles del dispositivo.
 
 Verificar modo avión después de cargar, brillo al máximo, carga conectada,
 PIN cambiado y descarga del CSV al cierre de cada jornada. Estas pruebas
-dependen de hitos posteriores; H3 todavía no es apto para operar el stand.
+dependen de hitos posteriores; H4 todavía no es apto para operar el stand.
 
 ## Calibración posterior
 
@@ -121,4 +151,4 @@ Para el POV frontal también están FRONTAL_LIFT_GAIN = 0,82 y
 FRONTAL_DEPTH_GAIN = 0,55. La geometría vigente se documenta en §13 de la especificación.
 Conviene calibrar GAIN y sensibilidad con gestos reales en tableta antes de tocar
 la gravedad. El umbral de premio se calibrará con rondas reales al implementar
-la administración; todavía no existe en H3.
+la administración de H5; su valor inicial es 24 puntos.

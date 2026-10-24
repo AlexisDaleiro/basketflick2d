@@ -12,6 +12,9 @@ import { SkeletonScreen } from './ui/SkeletonScreen.js';
 import { Round } from './game/Round.js';
 import { PlayingScreen } from './ui/PlayingScreen.js';
 import { Sfx } from './audio/Sfx.js';
+import { Storage } from './storage/Storage.js';
+import { AttractScreen } from './ui/AttractScreen.js';
+import { GameOverScreen } from './ui/GameOverScreen.js';
 
 const app = document.querySelector('#app');
 const screens = document.querySelector('#screens');
@@ -19,6 +22,10 @@ const warningRoot = document.querySelector('#idle-warning');
 const lifetime = new AbortController();
 const signal = lifetime.signal;
 document.title = es.title;
+let backend = null;
+try { backend = window.localStorage; } catch { /* Repository falls back to session memory. */ }
+const storage = new Storage({ backend }).load();
+try { navigator.storage?.persist?.()?.catch?.(() => {}); } catch { /* Optional persistence grant. */ }
 
 const renderer = new Renderer(document.querySelector('#game'));
 const bus = new EventBus();
@@ -36,12 +43,15 @@ const round = new Round({ debug, onEvent: event => {
   if (event.type === 'sfx:rim' || event.type === 'sfx:board') bus.emit(event.type, event);
   bus.emit('round:event', event);
 } });
+Object.assign(round.settings, storage.settings);
 let debugOverlay = null;
 let sceneTime = 0;
 for (const name of Object.values(STATES)) {
-  states[name] = name === STATES.PLAYING
-    ? new PlayingScreen({ root: screens, round, bus, sfx, navigate: (next, payload) => machine.transition(next, payload) })
-    : new SkeletonScreen({ name, root: screens, navigate: next => machine.transition(next) });
+  const navigate = (next, payload) => machine.transition(next, payload);
+  if (name === STATES.PLAYING) states[name] = new PlayingScreen({ root: screens, round, bus, sfx, navigate });
+  else if (name === STATES.ATTRACT_MODE) states[name] = new AttractScreen({ root: screens, storage, navigate });
+  else if (name === STATES.GAME_OVER) states[name] = new GameOverScreen({ root: screens, storage, navigate });
+  else states[name] = new SkeletonScreen({ name, root: screens, storage, navigate });
 }
 const machine = new StateMachine({ states, bus, development });
 const loop = new GameLoop({
@@ -129,7 +139,7 @@ if (debug) {
   import('./debug/DebugOverlay.js').then(({ DebugOverlay }) => {
     if (signal.aborted) return;
     debugOverlay = new DebugOverlay({ root: app, round, machine, loop });
-    window.__TB2D_DEBUG__ = Object.freeze({ machine, loop, input, idle, renderer, round, lab: round, sfx });
+    window.__TB2D_DEBUG__ = Object.freeze({ machine, loop, input, idle, renderer, round, lab: round, sfx, storage });
   });
 }
 

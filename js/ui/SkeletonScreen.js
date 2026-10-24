@@ -6,8 +6,9 @@ import { h, show } from './dom.js';
 
 /** A fully functional navigation screen shared by the four H1 states. */
 export class SkeletonScreen {
-  /** @param {{name: string, root: HTMLElement, navigate: (name: string) => void}} options */
-  constructor({ name, root, navigate }) {
+  /** @param {{name: string, root: HTMLElement, navigate: (name: string) => void, storage?:import('../storage/Storage.js').Storage}} options */
+  constructor({ name, root, navigate, storage }) {
+    this.storage = storage;
     this.name = name;
     this.navigate = navigate;
     this.elapsed = 0;
@@ -29,8 +30,9 @@ export class SkeletonScreen {
     this.actions = h('div', 'actions');
     this.inputStatus = h('p', 'input-status', es.inputReady);
     this.description = h('p', 'description', description);
+    this.notice = h('p', 'storage-notice'); this.notice.setAttribute('role', 'status');
     this.panel.append(this.badge, brand, h('p', 'brand-caption', es.brand), this.heading,
-      this.description, this.actions);
+      this.description, this.notice, this.actions);
     if (name === STATES.PLAYING) this.panel.append(this.inputStatus);
     this.buttons = [];
     if (name === STATES.ATTRACT_MODE) this.addAction(es.start, STATES.PLAYING, 'primary');
@@ -55,6 +57,7 @@ export class SkeletonScreen {
 
   /** @param {any} payload @returns {void} */
   enter(payload) {
+    this.notice.textContent = this.storage?.warning ? es[this.storage.warning] : '';
     this.elapsed = 0;
     this.inputStatus.textContent = es.inputReady;
     if (this.name === STATES.GAME_OVER) this.description.textContent = payload ? es.roundSummary(payload) : es.overDescription;
