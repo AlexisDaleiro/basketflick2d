@@ -1,8 +1,6 @@
 export const es = Object.freeze({
   title: 'ThreeBall 2D',
   brand: 'Three Dogs',
-  tagline: '¡Alimentos que completan a tu familia!',
-  brandClaims: Object.freeze(['Bajo en sodio', 'Sin colorantes ni aromatizantes artificiales', 'Salud intestinal', 'Salud oral']),
   milestone: 'H5 · ADMINISTRACIÓN',
   pinTitle: 'PIN del staff', pinDelete: 'Borrar', pinOk: 'OK', cancel: 'Cancelar', close: 'Cerrar',
   pinLength: 'Ingresa entre 4 y 6 dígitos.', pinWrong: 'PIN incorrecto.', pinLocked: 'PIN bloqueado.',

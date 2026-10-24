@@ -41,7 +41,7 @@ input { user-select: text; -webkit-user-select: text; }
 .badge { margin: 0; color: var(--c-lilac); letter-spacing: .18em; font-size: 12px; }
 .brand { width: clamp(115px, 28vw, 210px); color: var(--c-gold); }
 .brand svg { display: block; width: 100%; }
-.brand-caption { margin: 0; font-size: clamp(12px, 2vw, 18px); color: var(--c-yellow); }
+.brand-caption { margin: 0; font-size: clamp(12px, 2vw, 18px); }
 h1 { font-size: clamp(34px, 8vw, 76px); line-height: 1; letter-spacing: -.05em; margin: 0; text-shadow: 4px 5px 0 var(--c-ink); }
 h2 { font-size: clamp(22px, 5vw, 36px); margin: 0; }
 .description { max-width: 550px; font-size: clamp(14px, 2.3vw, 21px); line-height: 1.5; margin: 0; font-weight: 600; }
@@ -129,8 +129,6 @@ button:focus-visible { outline: 4px solid var(--c-lilac); outline-offset: 3px; }
 .record-card { margin: 0; padding: 12px 20px; color: var(--c-ink); background: var(--c-gold); border: 4px solid var(--c-ink); border-radius: 18px; font-size: clamp(16px, 3vw, 26px); animation: record-pulse 2.4s ease-in-out infinite; }
 .prize-invitation, .top-ticker { margin: 0; padding: 6px 12px; background: var(--c-ink); border-radius: 12px; font-size: clamp(12px, 2vw, 18px); }
 .prize-invitation { color: var(--c-gold); }
-.brand-claims { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
-.brand-claims li { padding: 4px 10px 4px 26px; border-radius: 999px; background: var(--c-purple) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-.7 -.8 1.4 1.5'%3E%3Cg fill='%23F1C400'%3E%3Cellipse cy='.25' rx='.47' ry='.36'/%3E%3Cellipse cx='-.4' cy='-.2' rx='.18' ry='.23'/%3E%3Cellipse cx='-.16' cy='-.5' rx='.18' ry='.24'/%3E%3Cellipse cx='.2' cy='-.5' rx='.18' ry='.24'/%3E%3Cellipse cx='.45' cy='-.16' rx='.18' ry='.23'/%3E%3C/g%3E%3C/svg%3E") 8px center / 14px no-repeat; font-size: clamp(11px, 1.7vw, 15px); }
 .top-ticker:empty { display: none; }
 .attract-cta { width: 100%; position: relative; animation: cta-pulse 1.2s ease-in-out infinite; }
 .attract-cta::after { content: ''; position: absolute; inset: -5px; border: 3px solid var(--c-yellow); border-radius: inherit; animation: cta-wave 1.2s ease-out infinite; pointer-events: none; }
