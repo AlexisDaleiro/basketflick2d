@@ -11,8 +11,9 @@ import { ballLayer } from '../render/visibility.js';
 import { theme } from '../config/theme.js';
 
 export class PlayingScreen {
-  /** @param {{root:HTMLElement,round:import('../game/Round.js').Round,bus:import('../core/EventBus.js').EventBus,sfx:import('../audio/Sfx.js').Sfx,navigate:(name:string,payload?:any)=>void}} options */
-  constructor({ root, round, bus, sfx, navigate }) {
+  /** @param {{root:HTMLElement,round:import('../game/Round.js').Round,bus:import('../core/EventBus.js').EventBus,sfx:import('../audio/Sfx.js').Sfx,storage?:import('../storage/Storage.js').Storage,navigate:(name:string,payload?:any)=>void}} options */
+  constructor({ root, round, bus, sfx, navigate, storage }) {
+    this.storage = storage;
     this.round = round; this.bus = bus; this.sfx = sfx; this.navigate = navigate;
     this.panel = h('section', 'playing-screen'); this.panel.dataset.state = C.STATES.PLAYING;
     this.panel.setAttribute('aria-label', es.playingTitle);
@@ -31,10 +32,11 @@ export class PlayingScreen {
   enter(payload) {
     this.controller = new AbortController();
     this.unsubscribe = this.bus.on('round:event', this.handleEvent);
-    this.hud.admin.addEventListener('click', () => this.navigate(C.STATES.ADMIN_PANEL), { signal: this.controller.signal });
     this.netStretch = 0; this.netVelocity = 0; this.trailElapsed = 0; this.misses = 0;
-    this.particles.clear(); this.hud.reset(); this.sfx.setEnabled(this.round.settings.soundEnabled);
-    this.round.reset(); this.hud.update(this.round); show(this.panel, true);
+    this.particles.clear(); this.hud.reset();
+    this.round.reset({ ...(this.storage?.settings || {}), practice: Boolean(payload?.practice) });
+    this.sfx.setEnabled(this.round.settings.soundEnabled);
+    this.hud.update(this.round); show(this.panel, true);
   }
 
   /** @returns {void} */
@@ -79,7 +81,11 @@ export class PlayingScreen {
   /** @param {number} dt s. @returns {void} */
   update(dt) {
     this.round.step();
-    if (this.round.phase === 'complete') { this.navigate(C.STATES.GAME_OVER, this.round.result); return; }
+    if (this.round.phase === 'complete') {
+      if (this.round.practice) this.navigate(C.STATES.ADMIN_PANEL, { returnFromPractice: true });
+      else this.navigate(C.STATES.GAME_OVER, this.round.result);
+      return;
+    }
     this.netVelocity += (-C.NET_SPRING * this.netStretch - C.NET_DAMPING * this.netVelocity) * dt;
     this.netStretch += this.netVelocity * dt;
     this.particles.update(dt);

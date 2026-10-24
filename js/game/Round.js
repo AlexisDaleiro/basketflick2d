@@ -53,7 +53,9 @@ export class Round {
   /** Start a fresh countdown; settings changes apply between rounds. @param {Partial<Round['settings']>} [settings] @returns {void} */
   reset(settings = {}) {
     Object.assign(this.settings, settings);
-    if (!C.ROUND_DURATIONS.includes(this.settings.roundDurationSec)) this.settings.roundDurationSec = C.ROUND_DURATION_SEC;
+    this.practice = Boolean(settings.practice);
+    if (this.practice) this.settings.roundDurationSec = C.PRACTICE_DURATION_SEC;
+    else if (!C.ROUND_DURATIONS.includes(this.settings.roundDurationSec)) this.settings.roundDurationSec = C.ROUND_DURATION_SEC;
     this.clear();
     this.phase = 'countdown';
     this.score = 0; this.shots = 0; this.baskets = 0; this.swishes = 0;
@@ -182,6 +184,7 @@ export class Round {
     this.result.baskets = this.baskets; this.result.swishes = this.swishes;
     this.result.bestStreak = this.bestStreak; this.result.durationSec = this.settings.roundDurationSec;
     this.result.precision = this.shots ? Math.round(this.baskets / this.shots * 100) : 0;
+    this.result.practice = this.practice;
     this.emit('complete');
   }
 }

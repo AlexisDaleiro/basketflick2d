@@ -90,6 +90,7 @@ export class Storage {
 
   /** Save once at entry to GAME_OVER, before any form interaction. @param {any} result @returns {any} */
   addPlay(result) {
+    if (result?.practice) return null;
     if (!object(result)) { this.recordError('Missing round result'); return null; }
     const previous = this.ranking()[0];
     const ts = this.now(); const prizeWon = result.score >= this.settings.prizeThreshold && this.prizesAvailable();
@@ -122,6 +123,32 @@ export class Storage {
     play.name = lead.name; play.phone = lead.phone; play.consent = lead.consent; play.leadAt = this.now();
     const durable = this.write('plays', this.plays);
     return { ok: true, durable, play };
+  }
+
+  /** @param {any} settings @param {string} deviceLabel @returns {boolean} */
+  saveSettings(settings, deviceLabel = this.meta.deviceLabel) {
+    this.settings = repairSettings({ ...this.settings, ...settings });
+    this.meta.deviceLabel = String(deviceLabel).trim().slice(0, 100);
+    const saved = this.write('settings', this.settings); const metaSaved = this.write('meta', this.meta);
+    return saved && metaSaved;
+  }
+  /** @param {string} id @param {boolean} delivered @returns {boolean} */
+  markDelivered(id, delivered) {
+    const play = this.plays.find(item => item.id === id);
+    if (!play?.prizeWon) return false;
+    play.prizeDelivered = Boolean(delivered); return this.write('plays', this.plays);
+  }
+  /** @returns {boolean} */
+  resetRanking() { this.meta.rankingResetAt = this.now(); return this.write('meta', this.meta); }
+  /** Delete only this app's namespace; keep in-memory data if deletion is denied. @returns {boolean} */
+  clearAll() {
+    try {
+      if (!this.backend) throw new Error('Storage unavailable');
+      const keys = [];
+      for (let i = 0; i < this.backend.length; i++) { const key = this.backend.key(i); if (key?.startsWith('tb2d.')) keys.push(key); }
+      for (const key of keys) this.backend.removeItem(key);
+      this.warning = null; this.load(); return true;
+    } catch { this.warning = 'storageUnavailable'; return false; }
   }
 
   /** @returns {number} UTF-16 estimate including backups. */

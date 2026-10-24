@@ -18,6 +18,7 @@ export class Hud {
     this.clock = h('strong', '', String(C.ROUND_DURATION_SEC)); this.clock.id = 'timer';
     clock.append(h('span', 'hud-label', es.time), this.clock);
     this.admin = h('button', 'hud-brand'); this.admin.type = 'button'; this.admin.setAttribute('aria-label', es.admin);
+    this.admin.dataset.admin = '';
     this.admin.append(new DOMParser().parseFromString(BRAND_SVG, 'image/svg+xml').documentElement);
     this.meter = h('div', 'streak-meter');
     this.paws = [];
@@ -40,6 +41,7 @@ export class Hud {
     this.feedbackUntil = 0; this.floatUntil = 0; this.shownScore = -1; this.shownSeconds = -1;
     this.shownStreak = -1; this.shownCountdown = ''; this.wasFire = false;
     this.hintX = null;
+    this.practice = h('p', 'practice-banner', es.practiceMode); panel.append(this.practice); show(this.practice, false);
   }
 
   /** @returns {void} */
@@ -66,6 +68,7 @@ export class Hud {
 
   /** @param {import('../game/Round.js').Round} round @returns {void} */
   update(round) {
+    show(this.practice, Boolean(round.practice));
     if (round.score !== this.shownScore) { this.shownScore = round.score; this.score.textContent = String(round.score); }
     if (round.remainingSec !== this.shownSeconds) {
       this.shownSeconds = round.remainingSec; this.clock.textContent = String(round.remainingSec);

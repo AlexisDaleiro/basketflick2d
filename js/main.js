@@ -8,7 +8,9 @@ import { InputManager } from './input/InputManager.js';
 import { Kiosk } from './kiosk/Kiosk.js';
 import { Renderer } from './render/Renderer.js';
 import { IdleWarning } from './ui/IdleWarning.js';
-import { SkeletonScreen } from './ui/SkeletonScreen.js';
+import { AdminPanel } from './ui/AdminPanel.js';
+import { AdminTrigger } from './ui/AdminTrigger.js';
+import { PinGuard } from './game/PinGuard.js';
 import { Round } from './game/Round.js';
 import { PlayingScreen } from './ui/PlayingScreen.js';
 import { Sfx } from './audio/Sfx.js';
@@ -25,6 +27,7 @@ document.title = es.title;
 let backend = null;
 try { backend = window.localStorage; } catch { /* Repository falls back to session memory. */ }
 const storage = new Storage({ backend }).load();
+const pinGuard = new PinGuard(storage); pinGuard.initialize().catch(() => {});
 try { navigator.storage?.persist?.()?.catch?.(() => {}); } catch { /* Optional persistence grant. */ }
 
 const renderer = new Renderer(document.querySelector('#game'));
@@ -48,16 +51,18 @@ let debugOverlay = null;
 let sceneTime = 0;
 for (const name of Object.values(STATES)) {
   const navigate = (next, payload) => machine.transition(next, payload);
-  if (name === STATES.PLAYING) states[name] = new PlayingScreen({ root: screens, round, bus, sfx, navigate });
+  if (name === STATES.PLAYING) states[name] = new PlayingScreen({ root: screens, round, bus, sfx, storage, navigate });
   else if (name === STATES.ATTRACT_MODE) states[name] = new AttractScreen({ root: screens, storage, navigate });
   else if (name === STATES.GAME_OVER) states[name] = new GameOverScreen({ root: screens, storage, navigate });
-  else states[name] = new SkeletonScreen({ name, root: screens, storage, navigate });
+  else states[name] = new AdminPanel({ root: screens, storage, guard: pinGuard, debug, navigate });
 }
 const machine = new StateMachine({ states, bus, development });
+const adminTrigger = new AdminTrigger({ target: document, debug, onActivate: () => machine.transition(STATES.ADMIN_PANEL) });
 const loop = new GameLoop({
   update: dt => { sceneTime += dt; machine.update(dt); },
   render: () => {
     renderer.begin(sceneTime); machine.render(renderer.ctx);
+    adminTrigger.update(performance.now());
     if (debugOverlay) { debugOverlay.render(renderer.ctx); debugOverlay.frame(performance.now()); }
   },
 });
@@ -97,6 +102,7 @@ function reconcile() {
 /** @param {boolean} nextHidden @returns {void} */
 function handleVisibility(nextHidden) {
   hidden = nextHidden;
+  if (hidden) adminTrigger.cancel();
   if (hidden && machine.current === STATES.PLAYING) interruptedPlaying = true;
   if (!hidden && interruptedPlaying) {
     interruptedPlaying = false;
@@ -122,6 +128,7 @@ for (const type of ['touchstart', 'pointerdown', 'keydown']) {
 }
 warning.button.addEventListener('click', () => idle.reset(), { signal });
 const unsubscribe = bus.on('state:change', ({ current }) => {
+  adminTrigger.cancel();
   input.cancel();
   idle.setEnabled(current !== STATES.ATTRACT_MODE);
   if (current === STATES.ATTRACT_MODE) {
@@ -133,6 +140,7 @@ machine.transition(STATES.ATTRACT_MODE);
 idle.start();
 input.start();
 kiosk.start();
+adminTrigger.start();
 reconcile();
 
 if (debug) {
@@ -155,6 +163,7 @@ window.addEventListener('pagehide', event => {
   renderer.destroy();
   debugOverlay?.destroy();
   kiosk.destroy();
+  adminTrigger.destroy();
   sfx.destroy();
   if (debug) delete window.__TB2D_DEBUG__;
 }, { signal });

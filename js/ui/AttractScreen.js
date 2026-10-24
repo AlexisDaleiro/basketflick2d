@@ -37,7 +37,6 @@ export class AttractScreen {
   enter() {
     this.elapsed = 0; this.refresh(); this.demo.reset(); this.controller = new AbortController();
     this.start.addEventListener('click', () => this.navigate(STATES.PLAYING), { signal: this.controller.signal });
-    this.admin.addEventListener('click', () => this.navigate(STATES.ADMIN_PANEL), { signal: this.controller.signal });
     show(this.panel, true);
   }
   /** @returns {void} */

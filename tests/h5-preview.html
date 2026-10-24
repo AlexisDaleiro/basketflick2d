@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>H5 · Prueba aislada con datos ficticios</title><link rel="stylesheet" href="../css/main.css">
+<body><main id="app"><div id="screens" class="overlay"></div></main>
+<script type="module">
+  import { Storage } from '../js/storage/Storage.js';
+  import { PinGuard } from '../js/game/PinGuard.js';
+  import { AdminPanel } from '../js/ui/AdminPanel.js';
+  import { GameLoop } from '../js/core/GameLoop.js';
+  import { h } from '../js/ui/dom.js';
+  // Deliberately isolated: no localStorage access, no real credentials or prize records.
+  async function start() {
+    const flags = new URLSearchParams(location.search); const items = new Map();
+    const backend = { getItem: key => items.get(key) ?? null, setItem: (key, value) => items.set(key, value),
+      removeItem: key => items.delete(key), get length() { return items.size; }, key: index => [...items.keys()][index] };
+    const storage = new Storage({ backend: flags.has('denied') ? null : backend }).load();
+    const entry = storage.addPlay({ score: 30, shots: 12, baskets: 10, swishes: 3, bestStreak: 5, durationSec: 45 });
+    storage.saveLead(entry.play.id, { name: 'Prueba aislada', phone: '098123456', consent: true });
+    const guard = new PinGuard(storage); await guard.initialize();
+    if (flags.has('fallback')) {
+      URL.createObjectURL = () => { throw new Error('Simulated download denial'); };
+      Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async () => { throw new Error('Simulated clipboard denial'); } } });
+      Object.defineProperty(navigator, 'canShare', { configurable: true, value: () => false });
+    }
+    const root = document.querySelector('#screens');
+    const panel = new AdminPanel({ root, storage, guard, debug: true, navigate: state => {
+      panel.exit(); loop.stop(); const result = h('section', 'screen');
+      result.append(h('h1', '', state), h('p', 'description', `Registros: ${storage.plays.length} · Ranking: ${storage.ranking().length}`)); root.append(result);
+    } });
+    const loop = new GameLoop({ update: () => panel.update(), render: () => {} });
+    panel.enter(flags.has('pin') ? {} : { debugBypass: true }); loop.start();
+    addEventListener('pagehide', () => { panel.exit(); loop.stop(); }, { once: true });
+  }
+  start();
+</script></body></html>

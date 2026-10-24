@@ -33,7 +33,8 @@ export class Kiosk {
 
   /** @param {Event} event @returns {void} */
   blockGesture(event) {
-    if (event.type === 'selectstart' && event.target?.matches?.('input')) return;
+    if (event.type === 'selectstart' && event.target?.matches?.('input, textarea[readonly]')) return;
+    if (event.type === 'contextmenu' && event.target?.matches?.('textarea[readonly]')) return;
     if (event.cancelable) event.preventDefault();
   }
 

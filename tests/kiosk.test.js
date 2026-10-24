@@ -32,3 +32,13 @@ test('Desktop preview does not request fullscreen or lock the monitor orientatio
   // No browser globals exist in Node: requesting either capability would fail.
   await assert.doesNotReject(kiosk.enterFullscreen());
 });
+
+test('Manual export text remains selectable/copyable while kiosk gestures on the game stay blocked', () => {
+  const kiosk = new Kiosk({ onVisibility: () => {} }); let prevented = 0;
+  for (const type of ['selectstart', 'contextmenu']) {
+    kiosk.blockGesture({ type, cancelable: true, target: { matches: selector => selector.includes('textarea[readonly]') }, preventDefault: () => prevented++ });
+  }
+  assert.equal(prevented, 0);
+  kiosk.blockGesture({ type: 'contextmenu', cancelable: true, target: { matches: () => false }, preventDefault: () => prevented++ });
+  assert.equal(prevented, 1);
+});

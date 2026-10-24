@@ -152,6 +152,8 @@ Transiciones permitidas (cualquier otra lanza error en desarrollo y se ignora en
 | `GAME_OVER` | "Saltar" / guardado + 2,5 s / idle 35 s | `ATTRACT_MODE` |
 | cualquiera | disparador secreto | `ADMIN_PANEL` (subfase `pin`) |
 | `ADMIN_PANEL` | "Salir" / PIN cancelado / idle 35 s | `ATTRACT_MODE` |
+| `ADMIN_PANEL` | "Probar tiro" (solo desde el panel autenticado) | `PLAYING` (práctica 20 s) |
+| `PLAYING` (práctica) | fin de `buzzer` | `ADMIN_PANEL` (retorno al panel, sin guardar) |
 
 Reglas:
 - Cada estado implementa `enter(payload)`, `exit()`, `update(dt)`, `render(ctx)` y `onInput(evt)`. `exit()` debe **remover todos los listeners y timers** que su `enter()` creó (para no tener fugas en jornadas de 10 h).

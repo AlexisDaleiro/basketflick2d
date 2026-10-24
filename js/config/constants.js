@@ -218,6 +218,20 @@ export const OFFENSIVE_WORDS = Object.freeze(['mierda', 'puta', 'puto', 'carajo'
 export const RESULT_CONFETTI_X = WORLD_WIDTH / 2; // u
 export const RESULT_CONFETTI_Y = 430; // u
 export const KEYBOARD_HEIGHT_DELTA = 120; // CSS px, visual viewport shrink before docking submit
+export const APP_VERSION = '0.5.0'; // release
+export const ADMIN_HOLD_MS = 3000; // ms
+export const ADMIN_MOVE_MAX = 20; // CSS px
+export const ADMIN_TAPS = 5; // taps
+export const ADMIN_TAP_WINDOW_MS = 2000; // ms
+export const PIN_MIN = 4; // digits
+export const PIN_MAX = 6; // digits
+export const PIN_ATTEMPTS = 3; // attempts
+export const PIN_LOCK_MS = 30000; // ms
+export const PIN_SALT_BYTES = 16; // bytes
+export const DEFAULT_PIN = '1234';
+export const PRACTICE_DURATION_SEC = 20; // s
+export const ADMIN_TOP_LIMIT = 20; // records
+export const TOAST_MS = 2000; // ms
 export const STATES = Object.freeze({
   ATTRACT_MODE: 'ATTRACT_MODE',
   PLAYING: 'PLAYING',
@@ -228,5 +242,5 @@ export const TRANSITIONS = Object.freeze({
   ATTRACT_MODE: Object.freeze([STATES.PLAYING, STATES.ADMIN_PANEL]),
   PLAYING: Object.freeze([STATES.GAME_OVER, STATES.ATTRACT_MODE, STATES.ADMIN_PANEL]),
   GAME_OVER: Object.freeze([STATES.PLAYING, STATES.ATTRACT_MODE, STATES.ADMIN_PANEL]),
-  ADMIN_PANEL: Object.freeze([STATES.ATTRACT_MODE]),
+  ADMIN_PANEL: Object.freeze([STATES.ATTRACT_MODE, STATES.PLAYING]),
 });

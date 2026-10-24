@@ -1,4 +1,4 @@
-# ThreeBall 2D · H4 + POV frontal
+# ThreeBall 2D · H5 + POV frontal
 
 Ronda jugable en HTML, CSS y JavaScript ES2020, sin bundler ni dependencias.
 Requiere Node.js 20 o posterior para las herramientas locales.
@@ -20,9 +20,11 @@ Recorrido: «¡TOCA AQUÍ PARA JUGAR!» → 3, 2, 1, ¡YA! → ronda de **45 s**
 «¡TIEMPO!» → resumen con puntaje, estadísticas y formulario → «GUARDAR Y JUGAR
 DE NUEVO», «GUARDAR» o «Saltar».
 Cada paso de la cuenta dura 700 ms; la pelota se ve pero no puede lanzarse hasta
-terminar «¡YA!». El logo de la esquina superior derecha abre la vista de admin
-de prueba; «Salir» vuelve a la portada. Entrar al admin descarta la ronda.
-El acceso secreto/PIN y la exportación CSV llegarán en H5.
+terminar «¡YA!». Mantén el logo superior derecho **3 segundos**, sin moverte
+más de 20 px, o tócalo **5 veces en 2 segundos** para abrir el PIN del staff.
+Un toque normal no hace nada. El PIN inicial es **1234**, ingresado con el teclado
+numérico propio; «Cancelar» o «Salir» vuelve a portada. Abrir admin durante una
+ronda la descarta sin guardar.
 
 La portada muestra una demo silenciosa con tiros cada 2,2 s, el récord diario,
 la invitación al premio y un ticker del Top 5 cada 4 s. El resultado se guarda
@@ -35,11 +37,11 @@ El teléfono es opcional. Acepta `098123456`, `98123456`, `+59898123456` o
 Para guardar teléfono se exige el consentimiento; los errores aparecen inline.
 El nombre admite hasta 24 caracteres y puede quedar vacío (jugador anónimo).
 El filtro de nombres del ranking está en `OFFENSIVE_WORDS`; conserva el original
-en el registro para la futura exportación.
+en el registro para la exportación CSV.
 
 Con **24 puntos o más** se gana un premio y se muestra un código `TD-XXXX`.
-El límite diario inicial es ilimitado; el control del límite y el umbral en UI
-llegan en H5. El conteo de ganadores es independiente del reinicio del ranking.
+El límite diario inicial es ilimitado; puedes cambiar el límite y el umbral
+en admin. El conteo de ganadores es independiente del reinicio del ranking.
 Los empates no muestran «nuevo récord»; el primer registro sí lo muestra.
 
 Los datos permanecen **en este navegador y origen**, con claves `tb2d.v1.*`.
@@ -53,6 +55,47 @@ Para inspección visual sin completar una ronda ni generar premios reales, abre
 `/tests/h4-preview.html`: usa datos ficticios y almacenamiento **solo en memoria**.
 Con `?denied=1` simula almacenamiento bloqueado. Permite probar cartel/código,
 validación, consentimiento y destinos tras guardar; no modifica tus partidas.
+
+## Administración y CSV
+
+El panel incluye duración 30/45/60 s, umbral de premio, sensibilidad 0,50–1,80,
+asistencia 0–40 %, aro móvil, sonido, stock diario, nombre del evento y etiqueta
+de tablet. Los sliders se guardan al soltarlos («Guardado»); las otras opciones,
+al cambiar. Se aplican a la siguiente ronda. «Probar tiro» usa estos ajustes
+durante **20 s**, vuelve al panel y **no guarda partidas, leads ni premios**.
+
+El PIN admite 4–6 dígitos y puede cambiarse desde admin, ingresándolo dos veces
+con el mismo teclado. Tres intentos fallidos bloquean el acceso por **30 s**,
+incluso cerrando el modal o recargando. Se guarda un hash hexadecimal de
+SHA-256(salt + PIN), con sal de 16 bytes; sin Web Crypto se usa FNV-1a de 64 bits
+y se conserva ese formato al volver a abrirlo. Si un hash SHA ya existente no
+puede verificarse por falta de API, se muestra un error; no se convierte ni se
+acepta otro PIN. **Es una medida disuasoria local, no seguridad real**: quien
+controle DevTools o los datos del navegador puede alterar el acceso.
+
+El Top 20 muestra teléfono enmascarado y permite marcar cada premio «Entregado».
+Los contadores diarios e históricos incluyen partidas, leads y premios.
+«Reiniciar ranking diario» requiere una segunda confirmación: oculta las
+partidas anteriores sin borrarlas y no repone el stock de premios.
+«Borrar todos los datos» exige escribir **BORRAR**, ofrece exportar antes y
+restablece también configuración y PIN; actúa solo sobre las claves `tb2d.*`.
+
+«Descargar CSV · Solo hoy» y «Todo el evento» preparan el archivo con nombre
+de evento/tablet actuales. El CSV usa UTF-8 con BOM, `;`, CRLF, teléfono local
+con espacios y protección contra fórmulas. Incluye las partidas ocultadas del
+ranking y los nombres originales. Ofrece descarga, compartir archivo si la API
+lo admite, copiar y texto de solo lectura como último recurso. Verifica el
+archivo recibido antes de borrar datos, especialmente en iPad standalone.
+
+Sistema muestra versión, cache/SW realmente disponible, persistencia, bytes y
+los últimos 50 errores con opción de copia. En H5 aún no se instala un Service
+Worker: es normal ver «Sin Service Worker/cache (H6)». Si existe un worker en
+espera, «Actualizar app» solicita `SKIP_WAITING` y recarga al activarse, siempre
+por ese botón. El worker y el registro global de errores llegan en H6.
+
+Para pruebas aisladas usa `/tests/h5-preview.html` (datos ficticios en memoria).
+`?pin=1` muestra el PIN; `?fallback=1` simula descarga/clipboard bloqueados;
+`?denied=1` simula almacenamiento bloqueado. No modifica tus partidas ni tu PIN.
 
 En la ronda verás el **tablero de frente y el aro centrado**, con la pelota grande
 en primer plano y la cancha en perspectiva. Desliza **desde la pelota hacia arriba**
@@ -125,7 +168,7 @@ En debug puedes cambiar, por ejemplo,
 
 La carpeta puede publicarse en GitHub Pages o Netlify sin compilación.
 HTTPS será necesario para Service Worker, Wake Lock y `crypto.subtle`.
-H4 todavía **no implementa instalación PWA ni funcionamiento offline**; llegan en H6.
+H5 todavía **no implementa instalación PWA ni funcionamiento offline**; llegan en H6.
 
 ## Instalar como PWA (a partir de H6)
 
@@ -141,7 +184,7 @@ El bloqueo de gestos de la página no reemplaza estos controles del dispositivo.
 
 Verificar modo avión después de cargar, brillo al máximo, carga conectada,
 PIN cambiado y descarga del CSV al cierre de cada jornada. Estas pruebas
-dependen de hitos posteriores; H4 todavía no es apto para operar el stand.
+dependen de H6 y de la prueba sostenida en tablet; todavía no se considera listo para el stand.
 
 ## Calibración posterior
 
@@ -151,4 +194,6 @@ Para el POV frontal también están FRONTAL_LIFT_GAIN = 0,82 y
 FRONTAL_DEPTH_GAIN = 0,55. La geometría vigente se documenta en §13 de la especificación.
 Conviene calibrar GAIN y sensibilidad con gestos reales en tableta antes de tocar
 la gravedad. El umbral de premio se calibrará con rondas reales al implementar
-la administración de H5; su valor inicial es 24 puntos.
+la administración; su valor inicial es 24 puntos. «Probar tiro» permite ajustar
+la sensibilidad sin contaminar las estadísticas. Mantén G = 2600 u/s² como
+referencia y calibra primero GAIN/sensibilidad con gestos reales.

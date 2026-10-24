@@ -59,7 +59,6 @@ export class GameOverScreen {
     this.form.addEventListener('submit', event => { event.preventDefault(); this.submit(event.submitter !== this.save); }, { signal });
     this.phone.addEventListener('input', () => { this.consent.required = Boolean(this.phone.value.trim()); }, { signal });
     this.skip.addEventListener('click', () => this.navigate(C.STATES.ATTRACT_MODE), { signal });
-    this.admin.addEventListener('click', () => this.navigate(C.STATES.ADMIN_PANEL), { signal });
     window.addEventListener('resize', this.resize, { signal });
     window.visualViewport?.addEventListener('resize', this.resize, { signal });
     window.visualViewport?.addEventListener('scroll', this.resize, { signal });

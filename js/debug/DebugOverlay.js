@@ -24,8 +24,8 @@ export class DebugOverlay {
     this.controller = new AbortController();
     document.addEventListener('keydown', event => {
       if (isNativeControl(event.target) || event.repeat || event.ctrlKey || event.metaKey || event.altKey) return;
-      if (event.key.toLowerCase() === 'r' && machine.current === STATES.PLAYING) round.reset();
-      if (event.key.toLowerCase() === 'a') machine.transition(STATES.ADMIN_PANEL);
+      if (event.key.toLowerCase() === 'r' && machine.current === STATES.PLAYING) round.reset({ practice: round.practice });
+      if (event.key.toLowerCase() === 'a') machine.transition(STATES.ADMIN_PANEL, { debugBypass: true });
     }, { signal: this.controller.signal });
   }
 

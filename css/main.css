@@ -157,3 +157,34 @@ button:focus-visible { outline: 4px solid var(--c-teal); outline-offset: 3px; }
 .form-error:empty, .storage-notice:empty { display: none; }
 .storage-notice { color: var(--c-yellow); font-size: 14px; font-weight: 600; padding: 10px; border: 2px solid var(--c-orange); border-radius: 12px; }
 .thanks { color: var(--c-teal); padding: 30px 0; }
+.practice-banner { position: absolute; top: 25%; left: 0; right: 0; text-align: center; color: var(--c-yellow); background: var(--c-navy); font-size: 15px; padding: 8px; }
+[data-admin] { position: relative; }
+.screen-brand[data-admin] { position: absolute; }
+[data-admin][style*="--admin-progress"]::after { content: ''; position: absolute; inset: -6px; border-radius: inherit; background: conic-gradient(var(--c-teal) var(--admin-progress), transparent 0); mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude; padding: 5px; pointer-events: none; }
+.admin-screen { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; pointer-events: auto; touch-action: pan-y; background: var(--c-navy); }
+.admin-screen * { touch-action: pan-y; }
+.admin-screen input, .admin-screen button { touch-action: manipulation; }
+.admin-content { max-width: 900px; margin: auto; padding: max(24px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left)); display: grid; gap: 20px; }
+.admin-content h1 { font-size: clamp(30px, 5vw, 50px); padding-right: 96px; }
+.admin-section, .csv-export, .admin-confirm { display: grid; gap: 16px; padding: 20px; border: 3px solid var(--c-navy-2); border-radius: 24px; background: var(--c-navy-2); }
+.admin-confirm { border-color: var(--c-orange); }
+.admin-field { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; min-height: 88px; }
+.admin-field input:not([type=checkbox]):not([type=range]), .admin-confirm input, .admin-screen textarea { width: 100%; min-height: 64px; padding: 12px; border: 3px solid var(--c-teal); border-radius: 12px; background: var(--c-white); color: var(--c-navy); font: inherit; }
+.admin-screen input[type=checkbox] { width: 32px; height: 32px; accent-color: var(--c-orange); }
+.admin-screen input[type=range] { width: 100%; min-height: 44px; accent-color: var(--c-orange); }
+.admin-field output { color: var(--c-yellow); }
+.duration-options { display: flex; gap: 8px; }
+.duration-options button[aria-pressed=true] { background: var(--c-orange); color: var(--c-navy); }
+.admin-table-wrap { overflow-x: auto; touch-action: pan-x pan-y; }
+.admin-screen table { border-collapse: collapse; width: 100%; font-size: 14px; }
+.admin-screen th, .admin-screen td { text-align: left; padding: 12px; border-bottom: 2px solid var(--c-navy); white-space: nowrap; }
+.admin-screen td input { min-width: 32px; }
+.admin-screen textarea { min-height: 160px; font: 14px monospace; user-select: text; -webkit-user-select: text; -webkit-touch-callout: default; }
+.admin-toast { position: sticky; top: 0; z-index: 3; background: var(--c-navy); color: var(--c-teal); padding: 10px; border-radius: 12px; margin: 0; }
+.admin-toast:empty { display: none; }
+.pin-pad { width: min(100%, 460px); margin: auto; padding: max(28px, env(safe-area-inset-top)) 20px 28px; display: grid; gap: 12px; text-align: center; }
+.pin-pad h2 { padding-right: 80px; text-align: left; min-height: 88px; }
+.pin-dots { margin: 0; font-size: 36px; letter-spacing: .2em; min-height: 50px; }
+.pin-keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.pin-keys button { padding: 8px; }
+button:disabled { opacity: .45; cursor: default; }

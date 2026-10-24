@@ -359,3 +359,64 @@ rechazo por falta de consentimiento, normalización de teléfono ficticio,
 guardado sin duplicar y destino PLAYING; también mostró el aviso de backend
 denegado. Consola sin errores/warnings. El teclado real y el tacto prolongado
 en Android/iPad deben verificarse en dispositivo; no se simulan como aprobados.
+
+## H5 — Administración, PIN y CSV · 23/10/2026
+
+- AdminTrigger sustituye los accesos temporales de un toque. Reconoce 3 s de
+  presión o cinco toques en una ventana de 2 s, cancela al superar 20 px, al
+  cambiar de estado/ocultar página o por pointercancel, y descarta dedos extra.
+  Los logos conservan al menos 96×96 px y son botones nativos excluidos del flick.
+  Solo debug dibuja el anillo; cinco activaciones de teclado también funcionan.
+- PinPad usa botones propios y puntos, sin campo de texto ni teclado del sistema.
+  PinGuard inicializa 1234 con sal de 16 bytes y SHA-256(sal+PIN), o FNV-1a64 si
+  Web Crypto no existe/falla al crear el hash. La longitud hexadecimal distingue
+  el algoritmo al verificar, evitando invalidar el fallback al recuperar Web Crypto.
+  Un SHA existente sin API no se degrada: se rechaza con mensaje recuperable.
+  Las credenciales solo disuaden: la app es cliente y no ofrece seguridad real.
+- Intentos y blockedUntil se guardan en tb2d.v1.pinGuard; tres fallos bloquean
+  30 s incluso al recargar. La verificación async impide envíos concurrentes.
+  Cambiar PIN requiere 4–6 dígitos y repetición dentro del panel autenticado.
+  Salir/idle cierra los controladores, borra buffers del teclado y bloquea el panel.
+- Configuración persistida al change, con preview de slider al input, toast y
+  aviso de fallo duradero. Round vuelve a tomar settings al entrar. Top 20,
+  teléfonos enmascarados, entregas, contadores, doble confirmación de reset y
+  borrado condicionado a BORRAR usan Storage; no se accede a datos desde la UI
+  mediante markup. Cada reconstrucción de tabla aborta sus listeners anteriores.
+- Se amplía la tabla de transiciones para cumplir «Probar tiro»: ADMIN→PLAYING
+  de práctica 20 s y vuelta al panel ya autenticado al completar el buzzer.
+  La práctica usa la misma física/HUD y una etiqueta visible; no pasa por
+  GAME_OVER y Storage rechaza resultados practice como segunda protección.
+  Idle, visibilidad o abrir admin manualmente descartan la sesión de práctica.
+- CSV puro con los 18 campos, BOM UTF-8, CRLF, separador ;, escape e inmunización
+  de los seis prefijos de fórmula especificados. El teléfono es 098 123 456.
+  Exporta registros por fecha local, sin aplicar el reset del ranking. Evento y
+  etiqueta se toman de los ajustes actuales, conforme al esquema que no guarda
+  esos campos por partida. Se mantienen nombre original, consentimiento y entregas.
+- CsvExport permite Blob/download, Files/share cuando canShare lo admite,
+  Clipboard y textarea readonly siempre presente. Excepciones de APIs denegadas
+  dejan disponible el texto. Se revocan URLs y se limpian CSV/file al salir.
+  El archivo/copia conserva un string separado del textarea: este normaliza
+  CRLF a LF al mostrarlos. Los textareas readonly permiten selección y menú de
+  copia como excepción al bloqueo kiosk, necesaria para el fallback manual.
+  El borrado total elimina únicamente tb2d.*, incluyendo backups y guardia PIN,
+  y reinicializa defaults; no toca almacenamiento ajeno.
+- Sistema consulta caches, registro SW y persistencia sin asumir que están
+  disponibles. No instala SW ni afirma que H5 funcione offline. Un worker en
+  espera se activa solo por botón con mensaje {type:'SKIP_WAITING'} y recarga
+  en controllerchange; ese contrato deberá respetarse en H6. Versiones alineadas
+  en package.json y APP_VERSION: 0.5.0. Captura global de errores y hardening
+  siguen reservados a H6; aquí se muestra/copia el ring ya existente.
+
+Verificación: 112 tests aprobados, incluidos límites de gestos, SHA/FNV conocidos,
+sal, cambio de PIN, bloqueo persistido y expiración, settings/entregas/reset,
+borrado de namespace aislado y práctica no persistida, CSV/BOM/escapes/inyección.
+En navegador: un toque normal no abrió admin; cinco toques y 1234 abrieron el
+panel. Práctica real de 20 s volvió al panel con el mismo contador de partidas.
+Duración de 30 s persistió tras recargar y se aplicó a la siguiente ronda; se
+restauró 45 s. Se abrió CSV de hoy con el registro H4 y se solicitó descarga.
+La fixture aislada verificó bloqueo visual de 30 s, entrega y contadores,
+fallback de download/clipboard, reset conservando leads/premios y confirmación
+BORRAR deshabilitada hasta escribir la palabra exacta (luego se canceló).
+No se cambió el PIN real ni se borraron partidas reales. Consola sin errores
+ni warnings. Share nativo, Excel/iPad, gesto sostenido táctil y SW update deben
+comprobarse con sus APIs/dispositivos; no se consideran verificados aquí.
