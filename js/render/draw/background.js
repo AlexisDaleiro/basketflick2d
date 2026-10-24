@@ -26,6 +26,7 @@ export function drawBackground(ctx, time, bounds) {
   const center = C.FRONTAL_CENTER_X;
   ctx.globalAlpha = 1; ctx.fillStyle = theme.ink2;
   ctx.fillRect(bounds.minX, backY, bounds.maxX - bounds.minX, bounds.maxY - backY);
+  drawBrandBoard(ctx, time, bounds, backY - C.BRAND_BOARD_HEIGHT);
   ctx.globalAlpha = 0.09; ctx.fillStyle = theme.lilac;
   ctx.beginPath(); ctx.moveTo(center - backHalf, backY); ctx.lineTo(center + backHalf, backY);
   ctx.lineTo(center + frontHalf, C.WORLD_HEIGHT); ctx.lineTo(center - frontHalf, C.WORLD_HEIGHT); ctx.closePath(); ctx.fill();
@@ -44,4 +45,17 @@ export function drawBackground(ctx, time, bounds) {
   ctx.globalAlpha = 0.2;
   drawPaw(ctx, center, C.FLOOR_Y - C.COURT_FLOOR_HEIGHT, C.PAW_PATTERN_SIZE * 2, theme.white);
   ctx.restore();
+}
+
+/** Courtside LED band scrolling the Three Dogs wordmark. @param {CanvasRenderingContext2D} ctx @param {number} time s. @param {{minX:number,maxX:number}} bounds @param {number} top u. @returns {void} */
+function drawBrandBoard(ctx, time, bounds, top) {
+  const spacing = C.BRAND_BOARD_SPACING; const middle = top + C.BRAND_BOARD_HEIGHT / 2;
+  ctx.fillStyle = theme.purple; ctx.fillRect(bounds.minX, top, bounds.maxX - bounds.minX, C.BRAND_BOARD_HEIGHT);
+  ctx.fillStyle = theme.yellow; ctx.fillRect(bounds.minX, top, bounds.maxX - bounds.minX, C.COURT_LINE_WIDTH);
+  ctx.font = C.BRAND_BOARD_FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const offset = time * C.BRAND_BOARD_SPEED % spacing;
+  for (let x = Math.floor(bounds.minX / spacing) * spacing - offset; x < bounds.maxX + spacing; x += spacing) {
+    ctx.fillStyle = theme.yellow; ctx.fillText('THREE DOGS', x, middle);
+    drawPaw(ctx, x + spacing / 2, middle, C.BRAND_BOARD_HEIGHT / 2, theme.white);
+  }
 }

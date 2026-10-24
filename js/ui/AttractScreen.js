@@ -18,12 +18,14 @@ export class AttractScreen {
     const ball = h('span', 'title-ball'); ball.setAttribute('aria-hidden', 'true');
     ball.append(new DOMParser().parseFromString('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60"><circle cx="30" cy="30" r="26" fill="currentColor" stroke="#000000" stroke-width="4"/><path d="M4 30h52M30 4v52M12 12q36 18 36 36M48 12q-36 18-36 36" fill="none" stroke="#000000" stroke-width="3"/></svg>', 'image/svg+xml').documentElement);
     title.append(h('span', '', wordmark), ball, h('span', '', dimension));
-    header.append(h('p', 'brand-caption', es.brand), title);
+    header.append(h('p', 'brand-caption', es.tagline), title);
+    const claims = h('ul', 'brand-claims'); claims.setAttribute('aria-label', es.brand);
+    for (const claim of es.brandClaims) claims.append(h('li', '', claim));
     this.record = h('p', 'record-card');
     this.prize = h('p', 'prize-invitation'); this.ticker = h('p', 'top-ticker');
     this.start = h('button', 'primary attract-cta', es.start); this.start.type = 'button';
     const footer = h('div', 'attract-actions');
-    footer.append(this.record, this.prize, this.ticker, this.start);
+    footer.append(claims, this.record, this.prize, this.ticker, this.start);
     this.panel.append(header, this.admin, footer); show(this.panel, false); root.append(this.panel);
   }
   /** @returns {void} */

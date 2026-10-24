@@ -3,6 +3,14 @@ import { theme } from '../../config/theme.js';
 import { drawPaw } from './paw.js';
 import { depthScale } from '../projection.js';
 import { roundedRectPath } from './path.js';
+import { brandDataUrl } from '../brand.js';
+
+let logo = null;
+/** Lazily decoded backboard logo; null until ready or outside a browser. @returns {HTMLImageElement|null} */
+function boardLogo() {
+  if (!logo && typeof Image !== 'undefined') { logo = new Image(); logo.src = brandDataUrl(theme.purple); }
+  return logo?.complete && logo.naturalWidth ? logo : null;
+}
 
 /** Frontal backboard, projected from the same finite slab used by collisions. @param {CanvasRenderingContext2D} ctx @param {import('../../game/FrontalHoop.js').FrontalHoop} hoop @returns {void} */
 export function drawBoard(ctx, hoop) {
@@ -21,7 +29,11 @@ export function drawBoard(ctx, hoop) {
   const targetY = C.FRONTAL_HORIZON_Y + (C.FRONTAL_TARGET_TOP + hoop.rimY - C.FRONTAL_RIM_Y - C.FRONTAL_HORIZON_Y) * scale;
   ctx.strokeRect(C.FRONTAL_CENTER_X - C.FRONTAL_TARGET_WIDTH * scale / 2, targetY,
     C.FRONTAL_TARGET_WIDTH * scale, C.FRONTAL_TARGET_HEIGHT * scale);
-  drawPaw(ctx, C.FRONTAL_CENTER_X, y + C.FRONTAL_PAW_SIZE * scale, C.FRONTAL_PAW_SIZE * scale / 2, theme.lilac);
+  const image = boardLogo();
+  if (image) {
+    const logoWidth = C.FRONTAL_LOGO_WIDTH * scale; const logoHeight = logoWidth * image.naturalHeight / image.naturalWidth;
+    ctx.drawImage(image, C.FRONTAL_CENTER_X - logoWidth / 2, y + C.FRONTAL_LOGO_TOP * scale, logoWidth, logoHeight);
+  } else drawPaw(ctx, C.FRONTAL_CENTER_X, y + C.FRONTAL_PAW_SIZE * scale, C.FRONTAL_PAW_SIZE * scale / 2, theme.lilac);
   ctx.restore();
 }
 
