@@ -86,7 +86,7 @@ test('Service worker is cache-first, opens ?debug=1 offline and leaves foreign o
 test('Manifest and shell declare an installable fullscreen PWA with existing icons', () => {
   const manifest = JSON.parse(readFileSync(join(root, 'manifest.webmanifest'), 'utf8'));
   assert.equal(manifest.display, 'fullscreen'); assert.deepEqual(manifest.display_override, ['fullscreen', 'standalone']);
-  assert.equal(manifest.orientation, 'any'); assert.equal(manifest.background_color, '#0F1B3D'); assert.equal(manifest.theme_color, '#0F1B3D');
+  assert.equal(manifest.orientation, 'any'); assert.equal(manifest.background_color, '#000000'); assert.equal(manifest.theme_color, '#000000');
   for (const icon of manifest.icons) assert.ok(assets.includes(`./${icon.src}`), icon.src);
   for (const size of ['192x192', '512x512']) assert.ok(manifest.icons.some(icon => icon.sizes === size && icon.type === 'image/png'));
   assert.ok(manifest.icons.some(icon => icon.purpose === 'maskable'));

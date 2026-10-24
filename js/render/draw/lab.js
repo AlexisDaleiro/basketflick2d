@@ -6,25 +6,25 @@ export function drawLab(ctx, lab) {
   const hoop = lab.world.hoop;
   ctx.save();
   ctx.lineWidth = LAB_LINE_WIDTH;
-  ctx.strokeStyle = theme.teal;
+  ctx.strokeStyle = theme.lilac;
   ctx.beginPath(); ctx.moveTo(0, FLOOR_Y); ctx.lineTo(WORLD_WIDTH, FLOOR_Y); ctx.stroke();
   ctx.fillStyle = theme.white;
   ctx.fillRect(hoop.board.minX, hoop.board.minY, hoop.board.maxX - hoop.board.minX, hoop.board.maxY - hoop.board.minY);
-  ctx.strokeStyle = theme.orange;
+  ctx.strokeStyle = theme.yellow;
   ctx.beginPath(); ctx.moveTo(hoop.front.x, hoop.rimY); ctx.lineTo(hoop.back.x, hoop.rimY); ctx.stroke();
   for (const ball of lab.world.balls) {
     if (ball.state === 'inactive') continue;
     if (ball.state === 'ready') {
       ctx.lineWidth = LAB_READY_RING_WIDTH;
-      ctx.strokeStyle = theme.teal;
+      ctx.strokeStyle = theme.lilac;
       ctx.beginPath(); ctx.arc(ball.position.x, ball.position.y, GRAB_RADIUS, 0, Math.PI * 2); ctx.stroke();
     }
     ctx.save();
     ctx.globalAlpha = ball.opacity;
     ctx.translate(ball.position.x, ball.position.y);
     ctx.rotate(ball.angle);
-    ctx.fillStyle = theme.orange;
-    ctx.strokeStyle = theme.navy;
+    ctx.fillStyle = theme.yellow;
+    ctx.strokeStyle = theme.ink;
     ctx.lineWidth = LAB_BALL_SEAM_WIDTH;
     ctx.beginPath(); ctx.arc(0, 0, BALL_RADIUS, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(-BALL_RADIUS, 0); ctx.lineTo(BALL_RADIUS, 0);
@@ -44,7 +44,7 @@ export function drawLab(ctx, lab) {
   ctx.moveTo(hoop.front.x + inset, hoop.rimY + NET_DEPTH);
   ctx.lineTo(hoop.back.x - inset, hoop.rimY + NET_DEPTH);
   ctx.stroke();
-  ctx.fillStyle = theme.orange;
+  ctx.fillStyle = theme.yellow;
   ctx.beginPath(); ctx.arc(hoop.front.x, hoop.rimY, RIM_TIP_RADIUS, 0, Math.PI * 2);
   ctx.moveTo(hoop.back.x + RIM_TIP_RADIUS, hoop.rimY);
   ctx.arc(hoop.back.x, hoop.rimY, RIM_TIP_RADIUS, 0, Math.PI * 2); ctx.fill();

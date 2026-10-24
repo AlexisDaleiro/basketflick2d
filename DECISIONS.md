@@ -488,3 +488,26 @@ Consola sin errores ni warnings fuera de los forzados y del fetch offline buscad
 No verificado aquí: Lighthouse (su categoría PWA fue retirada en Lighthouse 12;
 instalabilidad revisada por manifest/SW/HTTPS), 60 fps y soak de 8 h en tablet,
 instalación real en Android/iPad, modo avión real, gestos táctiles y Excel/iPad.
+
+## Paleta de Three Pet Food · 23/10/2026
+
+- A pedido del usuario, la paleta sale de https://threepetfood.com.br/es (colores
+  computados en la página): negro `#000000`, gris `#1F1F1F`, amarillo `#F1C400`
+  (primario de botones y destacados), `#F3C879` (`--secondary` del sitio),
+  violeta `#6D509C` y lila `#9B72ED` (línea perros), rojo `#DC2626` (del CSS del
+  sitio). Se descartaron el azul `#32819D` (línea gatos) y el menta `#BBF7D0`.
+  Esto reemplaza el navy/naranja/teal de §4.1 de la especificación.
+- Los tokens se renombraron por color real (`ink`, `ink2`, `yellow`, `gold`,
+  `purple`, `lilac`, `red`, `white`) en `theme.js` y `--c-*`. Así ningún token
+  llamado «navy» guarda negro. Por rol: el antiguo naranja pasa a amarillo
+  primario, el amarillo a dorado y el teal a lila (texto sobre negro con
+  contraste ≈5:1).
+- Pelota amarilla `#F1C400` con costuras negras y brillo blanco. El naranja de
+  básquet no existe en la paleta. Para que la pelota no se confunda con el aro,
+  el aro pasa a violeta (frente) y lila (fondo). Botones secundarios violeta con
+  texto blanco (≈6:1); el primario es amarillo con texto negro, como en el sitio.
+- Manifest, theme-color, íconos SVG/PNG (regenerados) y SVG inline actualizados.
+  La versión sube a 0.6.1 para que el SW instale el cache nuevo en las tablets.
+
+Verificación: 121 tests aprobados; portada y ronda renderizadas en navegador
+local con la nueva paleta tras activar 0.6.1. Consola sin errores nuevos.

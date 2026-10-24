@@ -4,7 +4,7 @@ import { BRAND_SVG } from '../render/brand.js';
 import { h, show } from './dom.js';
 
 const PAW_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" aria-hidden="true"><g fill="currentColor"><ellipse cx="20" cy="27" rx="11" ry="8"/><ellipse cx="6" cy="16" rx="5" ry="6"/><ellipse cx="15" cy="8" rx="5" ry="6"/><ellipse cx="26" cy="8" rx="5" ry="6"/><ellipse cx="35" cy="17" rx="5" ry="6"/></g></svg>';
-const HAND_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 180" aria-hidden="true"><path d="M42 155 18 115Q13 101 26 100L42 114V35Q42 20 54 23Q60 25 60 36V88Q66 76 76 88Q88 79 94 94Q110 92 108 111L101 151Z" fill="white" stroke="#0F1B3D" stroke-width="6"/><path d="M60 10V0M48 12 40 4M72 12 80 4" stroke="#FFC83D" stroke-width="5"/></svg>';
+const HAND_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 180" aria-hidden="true"><path d="M42 155 18 115Q13 101 26 100L42 114V35Q42 20 54 23Q60 25 60 36V88Q66 76 76 88Q88 79 94 94Q110 92 108 111L101 151Z" fill="white" stroke="#000000" stroke-width="6"/><path d="M60 10V0M48 12 40 4M72 12 80 4" stroke="#F3C879" stroke-width="5"/></svg>';
 
 /** DOM HUD is laid over the same logical world rectangle as Canvas. */
 export class Hud {

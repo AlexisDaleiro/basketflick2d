@@ -198,7 +198,7 @@ Service Worker, Wake Lock y `crypto.subtle`.
   de Safari. Los datos de la app instalada son independientes de los de Safari.
 
 Después de instalar, abre la app una vez con red para completar el precache.
-En admin → Sistema debe verse `Cache: tb2d-v0.6.0 · Cacheado: Sí`.
+En admin → Sistema debe verse `Cache: tb2d-v0.6.1 · Cacheado: Sí`.
 
 Los íconos son SVG (`icons/icon.svg`, `icons/icon-maskable.svg`) más PNG
 192/512/180. Si cambias los SVG, abre `/tools/make-icons.html`, descarga los

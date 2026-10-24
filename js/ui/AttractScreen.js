@@ -16,7 +16,7 @@ export class AttractScreen {
     const title = h('h1', 'attract-title'); title.setAttribute('aria-label', es.title);
     const [wordmark, dimension] = es.title.split(' ');
     const ball = h('span', 'title-ball'); ball.setAttribute('aria-hidden', 'true');
-    ball.append(new DOMParser().parseFromString('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60"><circle cx="30" cy="30" r="26" fill="currentColor" stroke="#0F1B3D" stroke-width="4"/><path d="M4 30h52M30 4v52M12 12q36 18 36 36M48 12q-36 18-36 36" fill="none" stroke="#0F1B3D" stroke-width="3"/></svg>', 'image/svg+xml').documentElement);
+    ball.append(new DOMParser().parseFromString('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60"><circle cx="30" cy="30" r="26" fill="currentColor" stroke="#000000" stroke-width="4"/><path d="M4 30h52M30 4v52M12 12q36 18 36 36M48 12q-36 18-36 36" fill="none" stroke="#000000" stroke-width="3"/></svg>', 'image/svg+xml').documentElement);
     title.append(h('span', '', wordmark), ball, h('span', '', dimension));
     header.append(h('p', 'brand-caption', es.brand), title);
     this.record = h('p', 'record-card');

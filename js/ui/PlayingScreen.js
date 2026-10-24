@@ -128,7 +128,7 @@ export class PlayingScreen {
   drawImpact(ctx, point, at, duration) {
     const progress = (this.round.world.timeMs - at) / duration;
     if (progress < 0 || progress >= 1) return;
-    ctx.save(); ctx.globalAlpha = 1 - progress; ctx.strokeStyle = theme.teal; ctx.lineWidth = C.IMPACT_LINE_WIDTH;
+    ctx.save(); ctx.globalAlpha = 1 - progress; ctx.strokeStyle = theme.lilac; ctx.lineWidth = C.IMPACT_LINE_WIDTH;
     ctx.beginPath(); ctx.arc(point.x, point.y, C.IMPACT_RING_RADIUS * (0.5 + progress), 0, Math.PI * 2); ctx.stroke(); ctx.restore();
   }
 

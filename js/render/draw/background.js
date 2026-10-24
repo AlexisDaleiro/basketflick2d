@@ -10,7 +10,7 @@ export function drawBackground(ctx, time, bounds) {
   ctx.globalAlpha = 0.07;
   for (let y = Math.floor(bounds.minY / spacing) * spacing - spacing + drift; y < bounds.maxY; y += spacing) {
     for (let x = Math.floor(bounds.minX / spacing) * spacing; x < bounds.maxX; x += spacing) {
-      drawPaw(ctx, x + spacing / 2, y, C.PAW_PATTERN_SIZE, theme.teal, -Math.PI / 6);
+      drawPaw(ctx, x + spacing / 2, y, C.PAW_PATTERN_SIZE, theme.lilac, -Math.PI / 6);
     }
   }
   ctx.globalAlpha = 0.055; ctx.fillStyle = theme.white;
@@ -24,12 +24,12 @@ export function drawBackground(ctx, time, bounds) {
   const backHalf = C.FRONTAL_COURT_BACK_WIDTH / 2;
   const frontHalf = C.FRONTAL_COURT_FRONT_WIDTH / 2;
   const center = C.FRONTAL_CENTER_X;
-  ctx.globalAlpha = 1; ctx.fillStyle = theme.navy2;
+  ctx.globalAlpha = 1; ctx.fillStyle = theme.ink2;
   ctx.fillRect(bounds.minX, backY, bounds.maxX - bounds.minX, bounds.maxY - backY);
-  ctx.globalAlpha = 0.09; ctx.fillStyle = theme.teal;
+  ctx.globalAlpha = 0.09; ctx.fillStyle = theme.lilac;
   ctx.beginPath(); ctx.moveTo(center - backHalf, backY); ctx.lineTo(center + backHalf, backY);
   ctx.lineTo(center + frontHalf, C.WORLD_HEIGHT); ctx.lineTo(center - frontHalf, C.WORLD_HEIGHT); ctx.closePath(); ctx.fill();
-  ctx.globalAlpha = 0.45; ctx.strokeStyle = theme.teal; ctx.lineWidth = C.COURT_LINE_WIDTH;
+  ctx.globalAlpha = 0.45; ctx.strokeStyle = theme.lilac; ctx.lineWidth = C.COURT_LINE_WIDTH;
   ctx.stroke();
   ctx.globalAlpha = 0.22; ctx.strokeStyle = theme.white;
   ctx.beginPath(); ctx.moveTo(center, backY); ctx.lineTo(center, bounds.maxY); ctx.stroke();
@@ -39,7 +39,7 @@ export function drawBackground(ctx, time, bounds) {
     const halfWidth = backHalf + (frontHalf - backHalf) * ratio;
     ctx.beginPath(); ctx.moveTo(center - halfWidth, y); ctx.lineTo(center + halfWidth, y); ctx.stroke();
   }
-  ctx.globalAlpha = 0.6; ctx.strokeStyle = theme.orange;
+  ctx.globalAlpha = 0.6; ctx.strokeStyle = theme.yellow;
   ctx.beginPath(); ctx.ellipse(center, C.FLOOR_Y, C.COURT_RING_RADIUS, C.COURT_RING_RADIUS / 3, 0, Math.PI, Math.PI * 2); ctx.stroke();
   ctx.globalAlpha = 0.2;
   drawPaw(ctx, center, C.FLOOR_Y - C.COURT_FLOOR_HEIGHT, C.PAW_PATTERN_SIZE * 2, theme.white);

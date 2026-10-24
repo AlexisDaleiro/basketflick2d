@@ -8,7 +8,7 @@ export class Particles {
   constructor(random = Math.random) {
     this.random = random;
     this.pool = Array.from({ length: C.PARTICLE_POOL_SIZE }, () => ({
-      life: 0, duration: 1, x: 0, y: 0, vx: 0, vy: 0, size: 0, angle: 0, spin: 0, type: 'paw', color: theme.teal,
+      life: 0, duration: 1, x: 0, y: 0, vx: 0, vy: 0, size: 0, angle: 0, spin: 0, type: 'paw', color: theme.lilac,
     }));
     this.activeCount = 0;
   }
@@ -25,7 +25,7 @@ export class Particles {
       p.life = p.duration;
       p.size = type === 'flame' ? C.FLAME_SIZE : C.PARTICLE_SIZE_MIN + this.random() * (C.PARTICLE_SIZE_MAX - C.PARTICLE_SIZE_MIN);
       p.angle = angle; p.spin = this.random() * Math.PI * 2 - Math.PI;
-      p.color = type === 'flame' ? theme.orange : this.random() < 0.5 ? theme.teal : theme.yellow;
+      p.color = type === 'flame' ? theme.yellow : this.random() < 0.5 ? theme.lilac : theme.gold;
       this.activeCount++; return true;
     }
     return false;

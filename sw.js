@@ -1,4 +1,4 @@
-const VERSION = '0.6.0';
+const VERSION = '0.6.1';
 const CACHE = `tb2d-v${VERSION}`;
 // Explicit precache list; tests/sw.test.js fails if any /js, /css or /icons file is missing.
 const ASSETS = [

@@ -80,7 +80,7 @@ export class SkeletonScreen {
 
   /** A small activity marker makes pause/resume observable without gameplay. @param {CanvasRenderingContext2D} ctx @returns {void} */
   render(ctx) {
-    ctx.fillStyle = this.name === STATES.ATTRACT_MODE ? theme.orange : theme.teal;
+    ctx.fillStyle = this.name === STATES.ATTRACT_MODE ? theme.yellow : theme.lilac;
     const range = WORLD_WIDTH - HEARTBEAT_MARGIN * 2 - HEARTBEAT_WIDTH;
     ctx.fillRect(HEARTBEAT_MARGIN + range * this.elapsed / HEARTBEAT_PERIOD, HEARTBEAT_Y, HEARTBEAT_WIDTH, HEARTBEAT_HEIGHT);
   }

@@ -52,16 +52,16 @@ export class DebugOverlay {
     if (this.machine.current !== STATES.PLAYING) return;
     const hoop = this.round.world.hoop;
     ctx.save();
-    ctx.strokeStyle = theme.yellow;
+    ctx.strokeStyle = theme.gold;
     ctx.lineWidth = DEBUG_LINE_WIDTH;
     projectPoint(hoop.board.minX, hoop.board.minY, hoop.board.minZ, this.point);
     const scale = depthScale(hoop.board.minZ);
     ctx.strokeRect(this.point.x, this.point.y, (hoop.board.maxX - hoop.board.minX) * scale, (hoop.board.maxY - hoop.board.minY) * scale);
     ctx.beginPath(); ctx.moveTo(0, FLOOR_Y); ctx.lineTo(WORLD_WIDTH, FLOOR_Y); ctx.stroke();
     ctx.font = this.font;
-    this.drawGate(ctx, hoop.rimY, hoop.radius - C.FRONTAL_RIM_TUBE_RADIUS, theme.teal, es.gateA);
+    this.drawGate(ctx, hoop.rimY, hoop.radius - C.FRONTAL_RIM_TUBE_RADIUS, theme.lilac, es.gateA);
     this.drawGate(ctx, hoop.gateBY, hoop.radius, theme.red, es.gateB);
-    ctx.fillStyle = theme.yellow;
+    ctx.fillStyle = theme.gold;
     ctx.beginPath();
     for (let point = 0; point < this.round.predictionCount; point++) {
       const x = this.round.prediction[point * 2];
