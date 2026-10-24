@@ -1,10 +1,12 @@
 import * as C from '../config/constants.js';
 import { es } from '../i18n/es.js';
 import { Particles } from '../render/Particles.js';
-import { drawBall, drawBallIndicator } from '../render/draw/ball.js';
+import { drawBall, drawBallIndicator, drawBallShadow } from '../render/draw/ball.js';
 import { drawBoard, drawNet, drawRim } from '../render/draw/hoop.js';
 import { Hud } from './Hud.js';
 import { h, show } from './dom.js';
+import { projectPoint } from '../render/projection.js';
+import { Vec2 } from '../physics/Vec2.js';
 
 export class PlayingScreen {
   /** @param {{root:HTMLElement,round:import('../game/Round.js').Round,bus:import('../core/EventBus.js').EventBus,sfx:import('../audio/Sfx.js').Sfx,navigate:(name:string,payload?:any)=>void}} options */
@@ -13,6 +15,8 @@ export class PlayingScreen {
     this.panel = h('section', 'playing-screen'); this.panel.dataset.state = C.STATES.PLAYING;
     this.panel.setAttribute('aria-label', es.playingTitle);
     this.hud = new Hud(this.panel); this.particles = new Particles();
+    this.effectOrigin = new Vec2();
+    this.renderOrder = round.world.balls.slice();
     this.netStretch = 0; this.netVelocity = 0; this.trailElapsed = 0; this.misses = 0;
     this.controller = null; this.unsubscribe = null;
     this.handleEvent = this.handleEvent.bind(this);
@@ -46,7 +50,8 @@ export class PlayingScreen {
       this.hud.reset(); this.particles.clear(); this.netStretch = 0; this.netVelocity = 0; this.misses = 0;
     } else if (event.type === 'basket') {
       const hoop = this.round.world.hoop;
-      this.particles.burst((hoop.front.x + hoop.back.x) / 2, hoop.gateBY);
+      projectPoint(hoop.centerX, hoop.gateBY, hoop.depth, this.effectOrigin);
+      this.particles.burst(this.effectOrigin.x, this.effectOrigin.y);
       this.netVelocity += C.NET_IMPULSE;
       this.hud.addPoints(event.value, now);
       this.hud.message(event.ball.swish ? es.swish : es.basket, now);
@@ -69,7 +74,10 @@ export class PlayingScreen {
     if (this.trailElapsed >= C.TRAIL_INTERVAL_MS) {
       this.trailElapsed = 0;
       if (this.round.streak >= C.FIRE_STREAK) {
-        for (const ball of this.round.world.balls) if (ball.state === 'flying') this.particles.emit(ball.position.x, ball.position.y, 'flame');
+        for (const ball of this.round.world.balls) if (ball.state === 'flying') {
+          projectPoint(ball.position.x, ball.position.y, ball.depth, this.effectOrigin);
+          this.particles.emit(this.effectOrigin.x, this.effectOrigin.y, 'flame');
+        }
       }
     }
   }
@@ -77,9 +85,18 @@ export class PlayingScreen {
   /** Correct layer order: board, rear rim, balls, net, front rim, particles, HUD. @param {CanvasRenderingContext2D} ctx @returns {void} */
   render(ctx) {
     const world = this.round.world;
+    // Six preallocated references, insertion-sorted far to near without a new array.
+    for (let i = 1; i < this.renderOrder.length; i++) {
+      const ball = this.renderOrder[i]; let j = i - 1;
+      while (j >= 0 && this.renderOrder[j].depth < ball.depth) { this.renderOrder[j + 1] = this.renderOrder[j]; j--; }
+      this.renderOrder[j + 1] = ball;
+    }
+    for (const ball of this.renderOrder) drawBallShadow(ctx, ball);
     drawBoard(ctx, world.hoop); drawRim(ctx, world.hoop, false);
-    for (const ball of world.balls) drawBall(ctx, ball, world.timeMs);
+    for (const ball of this.renderOrder) if (ball.depth >= world.hoop.depth - ball.radius) drawBall(ctx, ball, world.timeMs);
     drawNet(ctx, world.hoop, this.netStretch); drawRim(ctx, world.hoop, true);
+    // Balls between the camera and the hoop occlude the net, rather than crossing behind it.
+    for (const ball of this.renderOrder) if (ball.depth < world.hoop.depth - ball.radius) drawBall(ctx, ball, world.timeMs);
     this.particles.render(ctx);
     for (const ball of world.balls) drawBallIndicator(ctx, ball);
     this.hud.update(this.round);

@@ -22,6 +22,8 @@ export class Ball {
     this.points = 0;
     this.swish = false;
     this.spawnedAt = 0;
+    this.depth = 0; this.previousDepth = 0; this.depthVelocity = 0;
+    this.grabRadius = null;
   }
 
   /** Reset all shot data before reuse. @param {number} x u. @param {number} y u. @returns {void} */
@@ -32,6 +34,7 @@ export class Ball {
     this.state = 'ready';
     this.opacity = 1;
     this.spawnedAt = 0;
+    this.depth = 0; this.previousDepth = 0; this.depthVelocity = 0;
     this.angle = 0;
     this.touchedRim = false;
     this.touchedBoard = false;

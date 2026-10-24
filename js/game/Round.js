@@ -1,7 +1,8 @@
 import * as C from '../config/constants.js';
 import { FlickTracker } from '../input/FlickTracker.js';
-import { World } from '../physics/World.js';
-import { predictTrajectory } from '../physics/predict.js';
+import { FrontalWorld } from '../physics/FrontalWorld.js';
+import { calculateFrontalLaunch, predictFrontalTrajectory } from '../input/frontalLaunch.js';
+import { Vec2 } from '../physics/Vec2.js';
 
 const STEP_MS = C.FIXED_DT * C.MS_PER_SECOND;
 const COUNTDOWN_TICKS = Math.round(C.COUNTDOWN_STEP_MS / STEP_MS);
@@ -18,9 +19,10 @@ export class Round {
     this.event = { type: '', value: 0, ball: null };
     this.settings = { roundDurationSec: C.ROUND_DURATION_SEC, sensitivity: C.DEFAULT_SENSITIVITY,
       aimAssist: C.DEFAULT_AIM_ASSIST, movingHoop: false, soundEnabled: true };
-    this.world = new World({ onContact: event => this.emit(event.type, event.intensity, event.ball),
+    this.world = new FrontalWorld({ onContact: event => this.emit(event.type, event.intensity, event.ball),
       onResolve: ball => this.resolveShot(ball) });
-    this.tracker = new FlickTracker();
+    this.tracker = new FlickTracker({ calculateLaunch: calculateFrontalLaunch });
+    this.predictionPoint = new Vec2();
     this.prediction = debug ? new Float64Array(C.DEBUG_PREDICTION_POINTS * 2) : null;
     this.predictionCount = 0;
     this.result = { score: 0, shots: 0, baskets: 0, swishes: 0, bestStreak: 0, durationSec: 0, precision: 0 };
@@ -59,7 +61,7 @@ export class Round {
     this.tick = 0; this.phaseTicks = 0; this.liveTicks = 0; this.buzzerTicks = 0;
     this.countdownIndex = 0;
     this.remainingSec = this.settings.roundDurationSec;
-    this.spawn(C.SPAWN_X);
+    this.spawn(C.FRONTAL_CENTER_X);
     this.emit('countdown', 0);
   }
 
@@ -110,7 +112,7 @@ export class Round {
     this.world.step();
     if (this.phase === 'live' && !this.readyBall && this.tick >= this.nextSpawnTick
       && this.inFlight < C.MAX_BALLS_IN_FLIGHT) {
-      this.spawn(C.SPAWN_X_RANGE[0] + this.random() * (C.SPAWN_X_RANGE[1] - C.SPAWN_X_RANGE[0]));
+      this.spawn(C.FRONTAL_SPAWN_X_RANGE[0] + this.random() * (C.FRONTAL_SPAWN_X_RANGE[1] - C.FRONTAL_SPAWN_X_RANGE[0]));
     }
     if (this.phase === 'buzzer' && this.buzzerTicks >= BUZZER_MIN_TICKS
       && (this.inFlight === 0 || this.buzzerTicks >= BUZZER_MAX_TICKS)) this.finish();
@@ -138,8 +140,9 @@ export class Round {
       const result = this.tracker.finish(event.x, event.y, event.t, this.settings);
       if (!result.valid) { this.emit('rejected'); return; }
       if (this.inFlight >= C.MAX_BALLS_IN_FLIGHT) return;
-      if (this.prediction) this.predictionCount = predictTrajectory(this.readyBall.position, result.velocity, this.prediction);
+      if (this.prediction) this.predictionCount = predictFrontalTrajectory(this.readyBall.position, result.velocity, result.depthVelocity, this.prediction, this.predictionPoint);
       const ball = this.readyBall;
+      ball.depthVelocity = result.depthVelocity;
       ball.launch(result.velocity, this.world.timeMs);
       this.readyBall = null; this.inFlight++; this.shots++;
       this.nextSpawnTick = this.tick + RESPAWN_TICKS;

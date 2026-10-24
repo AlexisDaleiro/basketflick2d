@@ -1,4 +1,4 @@
-# ThreeBall 2D · H3
+# ThreeBall 2D · H3 + POV frontal
 
 Ronda jugable en HTML, CSS y JavaScript ES2020, sin bundler ni dependencias.
 Requiere Node.js 20 o posterior para las herramientas locales.
@@ -24,14 +24,17 @@ de prueba; «Salir» vuelve a la portada. Entrar al admin descarta la ronda.
 El acceso secreto/PIN llegará en H5. Premios, leads y guardado de partidas llegan
 en H4: los resultados de H3 solo se conservan mientras los ves.
 
-En la ronda verás una pelota abajo a la izquierda, el aro y tablero a la derecha
-y el piso. Desliza **desde la pelota**, mayormente hacia arriba y un poco hacia
-la derecha, y suelta. Comienza sobre la pelota o cerca de ella (radio de agarre
-2,6 veces el radio de la pelota). Un toque corto o un gesto descendente no lanza y muestra
-«¡Desliza hacia el aro!». Un ejemplo de tiro válido en el mundo lógico es avanzar
-unos 20 u a la derecha y 180 u hacia arriba en 60 ms: la velocidad final ronda
-(294, −2700) u/s con la asistencia por defecto. No es necesario acertar esos
-valores exactos para lanzar.
+En la ronda verás el **tablero de frente y el aro centrado**, con la pelota grande
+en primer plano y la cancha en perspectiva. Desliza **desde la pelota hacia arriba**
+y suelta. La pelota se aleja y se achica durante el vuelo; la fuerza determina
+si llega corta o pasada y el componente lateral controla la dirección.
+Comienza sobre la pelota o cerca de ella (radio de agarre 260 u).
+Un toque corto o un gesto descendente no lanza y muestra
+«¡Desliza hacia el aro!». Desde el primer spawn centrado, un ejemplo de tiro es
+mover 180 u recto hacia arriba en 60 ms: vx≈0, vy≈−2214 y vz≈1485 u/s.
+No es necesario acertar esos valores exactos para lanzar. Desde spawns laterales
+inclina ligeramente el gesto hacia el centro. Prueba primero una potencia media;
+un swipe muy largo y rápido puede pasar de largo.
 
 La pelota rebota en aro, tablero y piso. Una canasta suma **+2**, un swish **+3**.
 Desde la tercera canasta consecutiva cada una suma **+1 extra**, con medidor,
@@ -39,7 +42,7 @@ estela de llamas y ladrido procedural; un fallo corta la racha. Los tiros se
 puntúan en el orden en que se resuelven.
 
 Una nueva pelota aparece 450 ms después de lanzar, en una posición aleatoria
-entre 200 y 520 u, mientras haya menos de tres en vuelo y un hueco en el pool.
+entre 380 y 700 u, mientras haya menos de tres en vuelo y un hueco en el pool.
 Las pelotas resueltas siguen moviéndose y se desvanecen durante 600 ms. El pool
 tiene seis pelotas y el de partículas doscientas; no crecen con las rondas.
 
@@ -65,7 +68,7 @@ Abre http://127.0.0.1:5173/?debug=1 y entra a jugar. Verás:
 
 - FPS, pasos de física del frame y pelotas activas.
 - Velocidad del swipe, antes del clamp, después de los clamps y con asistencia,
-  más el ángulo de lanzamiento.
+  más el ángulo de lanzamiento y la velocidad de profundidad.
 - Colisionadores, abertura válida y compuertas A/B.
 - Trayectoria del último lanzamiento: puntos cada 1/30 s, con el mismo integrador
   y arrastre, sin predecir rebotes.
@@ -109,6 +112,8 @@ dependen de hitos posteriores; H3 todavía no es apto para operar el stand.
 
 Las constantes de física están en `js/config/constants.js`: GAIN = 0,90,
 sensibilidad inicial = 1,00, G = 2600 u/s² y asistencia inicial = 0,15.
+Para el POV frontal también están FRONTAL_LIFT_GAIN = 0,82 y
+FRONTAL_DEPTH_GAIN = 0,55. La geometría vigente se documenta en §13 de la especificación.
 Conviene calibrar GAIN y sensibilidad con gestos reales en tableta antes de tocar
 la gravedad. El umbral de premio se calibrará con rondas reales al implementar
 la administración; todavía no existe en H3.

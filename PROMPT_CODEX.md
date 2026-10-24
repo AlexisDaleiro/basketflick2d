@@ -1,5 +1,13 @@
 # PROMPT MAESTRO — ThreeBall 2D (Three Dogs by Districo)
 
+> **Corrección de dirección autorizada por el usuario (23/10/2026):** la vista
+> jugable es **frontal / POV**, con tablero y aro centrados, pelota en primer
+> plano y profundidad simulada en Canvas 2D. La sección 13 define el modelo
+> vigente y sustituye los detalles de geometría, lanzamiento y contactos laterales
+> de §3 para las rondas. El texto lateral original queda como referencia histórica
+> de H2; no debe restablecerse en la experiencia jugable. El resto de requisitos,
+> hitos y reglas de ronda sigue vigente.
+
 > **Rol:** Eres un ingeniero senior de videojuegos web y arquitecto front-end. Vas a construir **desde cero**, en este repositorio vacío, un juego web 2D completo, listo para producción, que correrá en una tableta en un stand de convención durante jornadas de 8–10 horas sin supervisión técnica. No es un prototipo: cada sección de esta especificación es un requisito. Si algo no está especificado, elige la opción más robusta y simple, y documéntala en `DECISIONS.md`.
 
 ---
@@ -565,3 +573,49 @@ Al terminar cada hito: corre `npm test`, revisa que no haya errores en consola y
 - cualquier desviación de esta especificación, con su justificación
 
 **No dejes TODOs, stubs, `console.log` de depuración fuera de `DebugOverlay` ni funciones sin implementar.** Si una API del navegador no existe en el dispositivo (Wake Lock, Fullscreen, vibrate, share), degrada en silencio con detección de capacidades; jamás rompas el flujo.
+
+---
+
+## 13. Corrección temprana — cámara frontal / POV
+
+Dirección visual aprobada por petición del usuario: mirar el tablero desde el
+frente, inspirado en las referencias adjuntas. Se conserva el arte procedural
+de marca, sin imágenes, WebGL ni dependencias de runtime.
+
+- El mundo lógico de pantalla sigue siendo 1080 × 1600 u. La simulación añade
+  una coordenada de profundidad `z` que aumenta al alejarse de la cámara.
+  `x` es lateral; `y` sigue hacia abajo y conserva gravedad y piso.
+- El primer spawn es `(x,y,z) = (540,1380,0)`; siguientes x entre 380 y 700 u.
+  Radio físico de pelota 100 u, radio de agarre 260 u. El spawn lateral leve
+  representa posiciones de tiro; el tablero siempre se ve centrado.
+- Centro físico del aro `(540,820,1800)`, radio horizontal 210 u, radio del tubo
+  12 u. Aro y compuertas se mueven juntos si se habilita la oscilación de H3/H5.
+- Tablero frontal finito: x entre −30 y 1110 u; y entre 160 y 780 u;
+  z entre 1900 y 1918 u. Es un panel ancho detrás del aro, no un poste lateral.
+- Proyección: `scale(z) = 2200 / (2200 + max(-800,z))`,
+  `screenX = 540 + (x-540)*scale`, `screenY = 260 + (y-260)*scale`.
+  El radio visible también se multiplica por scale. La pelota se reduce al
+  acercarse al aro y se agranda si rebota hacia la cámara.
+- Se mantiene la captura de swipe de §3.2 y sus rechazos. Tras GAIN, sensibilidad
+  y clamps de magnitud/ángulo: `vx = vx_clamped`,
+  `vy = 0.82 * vy_clamped`, `vz = -0.55 * vy_clamped`.
+  La asistencia interpola solo vx hacia el centro del aro usando la raíz
+  descendente a y=820, sin corregir profundidad. La potencia importa: un tiro
+  corto o pasado puede fallar aunque se alinee con el aro en pantalla.
+- Euler semi-implícito fijo a 1/240 s: gravedad solo en y, arrastre lineal en
+  vx/vy/vz. Las pelotas siguen sin colisionar entre sí; pool de seis.
+- Aro: contacto esfera–tubo circular, buscando el punto más cercano del círculo
+  horizontal x/z y resolviendo con la normal en tres dimensiones. Tablero:
+  esfera–AABB tridimensional. Piso: plano y=1540. Se conservan restitución,
+  fricción, cooldown, flags de swish y audio de §3.5.
+- Juez: compuerta A en y=820, B en y=890. Se interpolan x **y z** al cruzar.
+  A requiere distancia radial al centro en x/z menor que 210−12; B requiere
+  distancia ≤210 y confirmación en ≤600 ms. Entrada por debajo no puntúa.
+  Fallo por piso, timeout de 4 s, x fuera de límites o z fuera de [−800,2800].
+- Render: tablero frontal, aro proyectado, red, pelotas ordenadas por profundidad,
+  sombra en el piso, partículas proyectadas y HUD. Las pelotas que están delante
+  del aro ocluyen la red. El debug muestra las compuertas proyectadas, trayectoria
+  frontal y velocidad de profundidad.
+- Se mantienen countdown, cronómetro, puntuación, racha, buzzer, audio, kiosk e
+  inactividad de H3. Los módulos laterales puros de H2 quedan como harness y
+  referencia de regresión; Round usa los módulos frontales.

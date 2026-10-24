@@ -231,3 +231,41 @@ pendientes de H6; no se han ejecutado ni se dan por aprobadas en H1.
   vibración y rendimiento sostenido en tablet requieren prueba física.
 - El soak de ocho horas, 200 rondas en dispositivos reales, offline/PWA y los
   criterios de hardening siguen pendientes de H6; no se consideran aprobados aquí.
+
+## Corrección temprana de dirección: POV frontal · 23/10/2026
+
+- El usuario pidió explícitamente cambiar la vista de costado por una vista
+  frontal en primera persona, aportando dos imágenes de referencia. Esta petición
+  sustituye la geometría lateral original. Se añadió §13 a PROMPT_CODEX.md para
+  que los hitos siguientes no vuelvan al modelo visual anterior.
+- La ronda usa FrontalWorld, FrontalHoop, FrontalShotJudge y frontalLaunch.
+  Añaden profundidad física a la misma integración fija y al mismo pool de
+  pelotas. Canvas sigue siendo 2D, con proyección de x/y/z y radio por distancia.
+  No hay dependencias, imágenes de arte ni WebGL.
+- El tablero se dibuja ancho y centrado, con objetivo y huella de marca. El aro
+  se ve como una elipse frontal, la cancha como un trapecio y la pelota aparece
+  más grande en primer plano, con sombra de piso y reducción durante el viaje.
+- Se conservan los módulos y tests puros laterales de H2 como harness histórico;
+  no se cargan en la ronda jugable para simular tiros laterales. FlickTracker
+  acepta un calculador de lanzamiento inyectado para compartir muestreo/rechazos.
+- El primer tiro parte de x=540; los siguientes varían entre 380 y 700. Un gesto
+  recto desde el centro puede encestar. No se corrige la profundidad con aimAssist:
+  la velocidad del gesto sigue diferenciando tiros cortos, correctos y pasados.
+- La canasta exige cruces descendentes físicos de A/B dentro de la abertura
+  circular x/z. No basta una coincidencia visual. Las colisiones se resuelven
+  como esfera contra tubo del aro, tablero finito o piso, preservando swish,
+  restitución/fricción, sonido, fade, puntuación, racha y buzzer.
+- Los efectos usan posiciones proyectadas. Se mantiene un array de seis
+  referencias para ordenar pelotas de lejos a cerca sin allocations por frame;
+  las que están delante del aro se dibujan delante de la red. Los indicadores y
+  la trayectoria de debug también usan la proyección frontal.
+- Las constantes nuevas están agrupadas como FRONTAL_* para calibrar la nueva
+  dirección sin modificar las regresiones históricas de H2. Los tests de Round
+  se actualizaron al spawn y a los contactos frontales; se conservan sus reglas.
+
+Verificación: 75 tests aprobados, incluyendo proyección, tamaño por distancia,
+lanzamiento recto, predicción, rebote del aro y tablero en profundidad, rechazo
+de coincidencia de pantalla a profundidad errónea, gates y reciclaje. En el
+navegador integrado se inspeccionó la vista y un tiro real de potencia media
+marcó 2 puntos, sin errores ni warnings de consola. La calibración de sensación
+del tiro se debe terminar en tableta con el nuevo POV.

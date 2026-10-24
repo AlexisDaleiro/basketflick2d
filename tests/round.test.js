@@ -15,8 +15,8 @@ function flick(round, start = 0) {
   const ball = round.readyBall;
   if (!ball) return;
   round.onInput({ type: 'start', x: ball.position.x, y: ball.position.y, t: start });
-  round.onInput({ type: 'move', x: ball.position.x + 15, y: ball.position.y - 135, t: start + 45 });
-  round.onInput({ type: 'end', x: ball.position.x + 20, y: ball.position.y - 180, t: start + 60 });
+  round.onInput({ type: 'move', x: ball.position.x, y: ball.position.y - 135, t: start + 45 });
+  round.onInput({ type: 'end', x: ball.position.x, y: ball.position.y - 180, t: start + 60 });
 }
 function resolved(round, outcome, swish = false) {
   const ball = new Ball(99);
@@ -51,20 +51,25 @@ test('Round uses supported 30/45/60 durations with no countdown time deducted', 
   }
 });
 
-test('Round spawns at x=360 first and a random ready ball exactly 450 ms after launch', () => {
+test('Round spawns centered first and a random ready ball exactly 450 ms after launch', () => {
   const round = live({ random: () => 1 });
   const first = round.readyBall;
-  assert.equal(first.position.x, C.SPAWN_X);
+  assert.equal(first.position.x, C.FRONTAL_CENTER_X);
   flick(round); assert.equal(round.shots, 1); assert.equal(round.readyBall, null);
   advance(round, ticks(C.RESPAWN_DELAY_MS) - 1); assert.equal(round.readyBall, null);
-  round.step(); assert.equal(round.readyBall.position.x, C.SPAWN_X_RANGE[1]);
+  round.step(); assert.equal(round.readyBall.position.x, C.FRONTAL_SPAWN_X_RANGE[1]);
   assert.equal(round.readyBall.position.y, C.SPAWN_Y); assert.equal(first.state, 'flying');
 });
 
 test('Round caps flight at three balls, waits for capacity, then spawns without changing its pool', () => {
   const round = live({ random: () => 0.5 });
   const pool = round.world.balls;
-  for (let shot = 0; shot < 3; shot++) { flick(round, shot * 200); advance(round, ticks(C.RESPAWN_DELAY_MS)); }
+  round.world.gravity = 0;
+  for (let shot = 0; shot < 3; shot++) {
+    const ball = round.readyBall;
+    flick(round, shot * 200); ball.velocity.set(0, 0); ball.depthVelocity = 0; ball.position.y = 900;
+    advance(round, ticks(C.RESPAWN_DELAY_MS));
+  }
   assert.equal(round.shots, 3); assert.equal(round.inFlight, 3); assert.equal(round.readyBall, null);
   advance(round, ticks(200)); assert.equal(round.readyBall, null);
   const ball = pool.find(item => item.state === 'flying');
@@ -101,7 +106,8 @@ test('Buzzer blocks new shots, cancels an active swipe, permits in-flight scorin
   assert.equal(round.tracker.active, true);
   round.liveTicks = Math.round(round.settings.roundDurationSec / C.FIXED_DT) - 1;
   const flying = round.world.balls.find(ball => ball.state === 'flying');
-  flying.position.set(800, 550); flying.previous.copy(flying.position); flying.velocity.set(0, 2000);
+  flying.position.set(C.FRONTAL_CENTER_X, C.FRONTAL_RIM_Y - 10); flying.previous.copy(flying.position);
+  flying.depth = C.FRONTAL_HOOP_DEPTH; flying.depthVelocity = 0; flying.velocity.set(0, 2000);
   round.step();
   assert.equal(round.phase, 'buzzer'); assert.equal(round.readyBall, null); assert.equal(round.tracker.active, false);
   round.onInput({ type: 'end', x: 800, y: 200, t: 1060 }); assert.equal(round.shots, 1);
@@ -116,6 +122,7 @@ test('Buzzer hard deadline stops unresolved shots at 2.5 s and emits completion 
   round.world.gravity = 0; flick(round);
   const ball = round.world.balls.find(item => item.state === 'flying');
   ball.position.set(300, 900); ball.velocity.set(0, 0);
+  ball.depth = 0; ball.depthVelocity = 0;
   round.liveTicks = Math.round(round.settings.roundDurationSec / C.FIXED_DT) - 1; round.step();
   advance(round, ticks(C.BUZZER_MAX_MS) - 1); assert.equal(round.phase, 'buzzer');
   round.step(); assert.equal(round.phase, 'complete'); assert.equal(ball.outcome, 'timeout');
@@ -127,8 +134,8 @@ test('Optional moving hoop starts smoothly only in the last 10 s and continues t
   const round = live(); round.settings.movingHoop = true;
   advance(round, ticks(34900)); assert.equal(round.world.movingHoop, false);
   advance(round, ticks(100)); assert.equal(round.world.movingHoop, true);
-  assert.ok(Math.abs(round.world.hoop.rimY - C.RIM_Y) < 1e-8);
-  advance(round, ticks(800)); assert.ok(Math.abs(round.world.hoop.rimY - C.RIM_Y - 70) < 1e-8);
+  assert.ok(Math.abs(round.world.hoop.rimY - C.FRONTAL_RIM_Y) < 1e-8);
+  advance(round, ticks(800)); assert.ok(Math.abs(round.world.hoop.rimY - C.FRONTAL_RIM_Y - 70) < 1e-8);
   advance(round, ticks(9200)); assert.equal(round.phase, 'buzzer');
   const before = round.world.hoop.rimY;
   advance(round, ticks(800)); assert.equal(round.world.movingHoop, true);

@@ -3,6 +3,8 @@ import { es } from '../i18n/es.js';
 import { theme } from '../config/theme.js';
 import { isNativeControl } from '../input/InputManager.js';
 import { h } from '../ui/dom.js';
+import * as C from '../config/constants.js';
+import { projectPoint, depthScale } from '../render/projection.js';
 
 /** Constructed exclusively with ?debug=1. */
 export class DebugOverlay {
@@ -18,6 +20,7 @@ export class DebugOverlay {
     this.elapsed = 0;
     this.previousTime = null;
     this.font = `900 ${DEBUG_FONT_SIZE}px system-ui`;
+    this.point = { x: 0, y: 0 };
     this.controller = new AbortController();
     document.addEventListener('keydown', event => {
       if (isNativeControl(event.target) || event.repeat || event.ctrlKey || event.metaKey || event.altKey) return;
@@ -51,20 +54,13 @@ export class DebugOverlay {
     ctx.save();
     ctx.strokeStyle = theme.yellow;
     ctx.lineWidth = DEBUG_LINE_WIDTH;
-    ctx.strokeRect(hoop.board.minX, hoop.board.minY, hoop.board.maxX - hoop.board.minX, hoop.board.maxY - hoop.board.minY);
-    ctx.beginPath();
-    ctx.arc(hoop.front.x, hoop.rimY, RIM_TIP_RADIUS, 0, Math.PI * 2);
-    ctx.moveTo(hoop.back.x + RIM_TIP_RADIUS, hoop.rimY);
-    ctx.arc(hoop.back.x, hoop.rimY, RIM_TIP_RADIUS, 0, Math.PI * 2);
-    ctx.moveTo(0, FLOOR_Y); ctx.lineTo(WORLD_WIDTH, FLOOR_Y); ctx.stroke();
-    ctx.strokeStyle = theme.teal;
-    ctx.beginPath(); ctx.moveTo(hoop.front.x + RIM_TIP_RADIUS, hoop.rimY);
-    ctx.lineTo(hoop.back.x - RIM_TIP_RADIUS, hoop.rimY); ctx.stroke();
-    ctx.strokeStyle = theme.red;
-    ctx.beginPath(); ctx.moveTo(hoop.front.x, hoop.gateBY); ctx.lineTo(hoop.back.x, hoop.gateBY); ctx.stroke();
+    projectPoint(hoop.board.minX, hoop.board.minY, hoop.board.minZ, this.point);
+    const scale = depthScale(hoop.board.minZ);
+    ctx.strokeRect(this.point.x, this.point.y, (hoop.board.maxX - hoop.board.minX) * scale, (hoop.board.maxY - hoop.board.minY) * scale);
+    ctx.beginPath(); ctx.moveTo(0, FLOOR_Y); ctx.lineTo(WORLD_WIDTH, FLOOR_Y); ctx.stroke();
     ctx.font = this.font;
-    ctx.fillStyle = theme.teal; ctx.fillText(es.gateA, hoop.front.x, hoop.rimY - DEBUG_LABEL_MARGIN);
-    ctx.fillStyle = theme.red; ctx.fillText(es.gateB, hoop.front.x, hoop.gateBY + DEBUG_LABEL_MARGIN * 2);
+    this.drawGate(ctx, hoop.rimY, hoop.radius - C.FRONTAL_RIM_TUBE_RADIUS, theme.teal, es.gateA);
+    this.drawGate(ctx, hoop.gateBY, hoop.radius, theme.red, es.gateB);
     ctx.fillStyle = theme.yellow;
     ctx.beginPath();
     for (let point = 0; point < this.round.predictionCount; point++) {
@@ -74,6 +70,20 @@ export class DebugOverlay {
     }
     ctx.fill();
     ctx.restore();
+  }
+
+  /** @param {CanvasRenderingContext2D} ctx @param {number} y u. @param {number} radius u. @param {string} color @param {string} label @returns {void} */
+  drawGate(ctx, y, radius, color, label) {
+    const hoop = this.round.world.hoop;
+    ctx.strokeStyle = color; ctx.beginPath();
+    for (let segment = 0; segment <= C.FRONTAL_RING_SEGMENTS; segment++) {
+      const angle = segment / C.FRONTAL_RING_SEGMENTS * Math.PI * 2;
+      projectPoint(hoop.centerX + Math.cos(angle) * radius, y, hoop.depth + Math.sin(angle) * radius, this.point);
+      if (segment === 0) ctx.moveTo(this.point.x, this.point.y); else ctx.lineTo(this.point.x, this.point.y);
+    }
+    ctx.stroke();
+    projectPoint(hoop.centerX - radius, y, hoop.depth, this.point);
+    ctx.fillStyle = color; ctx.fillText(label, this.point.x, this.point.y - DEBUG_LABEL_MARGIN);
   }
 
   /** @returns {void} */

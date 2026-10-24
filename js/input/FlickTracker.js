@@ -3,8 +3,9 @@ import { Vec2 } from '../physics/Vec2.js';
 import { calculateLaunchVelocity } from './launch.js';
 
 export class FlickTracker {
-  /** Allocate the fixed sample buffer and reusable launch diagnostics. */
-  constructor() {
+  /** @param {{calculateLaunch?:typeof calculateLaunchVelocity}} [options] Allocate the fixed sample buffer and reusable launch diagnostics. */
+  constructor({ calculateLaunch = calculateLaunchVelocity } = {}) {
+    this.calculateLaunch = calculateLaunch;
     this.samples = new Float64Array(FLICK_BUFFER_SIZE * 3);
     this.origin = new Vec2();
     this.initial = new Vec2();
@@ -13,13 +14,13 @@ export class FlickTracker {
     this.count = 0;
     this.startedAt = 0;
     this.lastTime = 0;
-    this.result = { valid: false, reason: '', swipe: new Vec2(), raw: new Vec2(), clamped: new Vec2(), velocity: new Vec2(), angle: 0 };
+    this.result = { valid: false, reason: '', swipe: new Vec2(), raw: new Vec2(), clamped: new Vec2(), velocity: new Vec2(), angle: 0, depthVelocity: 0 };
   }
 
   /** @param {number} x u. @param {number} y u. @param {number} t event.timeStamp, ms. @param {{state:string,position:{x:number,y:number}}} ball @returns {boolean} */
   start(x, y, t, ball) {
     this.cancel();
-    if (ball.state !== 'ready' || Math.hypot(x - ball.position.x, y - ball.position.y) > GRAB_RADIUS + CONTACT_EPSILON) return false;
+    if (ball.state !== 'ready' || Math.hypot(x - ball.position.x, y - ball.position.y) > (ball.grabRadius ?? GRAB_RADIUS) + CONTACT_EPSILON) return false;
     this.active = true;
     this.head = 0;
     this.count = 0;
@@ -78,7 +79,7 @@ export class FlickTracker {
     else {
       result.valid = true;
       result.reason = '';
-      calculateLaunchVelocity(result.swipe, this.origin, settings, result);
+      this.calculateLaunch(result.swipe, this.origin, settings, result);
     }
     return result;
   }
