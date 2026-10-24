@@ -1,4 +1,4 @@
-# PROMPT MAESTRO — ThreeBall 2D (Three Dogs by Districo)
+# PROMPT MAESTRO — ThreeBall 2D (Three Dogs)
 
 > **Corrección de dirección autorizada por el usuario (23/10/2026):** la vista
 > jugable es **frontal / POV**, con tablero y aro centrados, pelota en primer
@@ -17,7 +17,7 @@
 | Campo | Valor |
 |---|---|
 | Nombre | **ThreeBall 2D** |
-| Marca | **Three Dogs by Districo**: estilo canino moderno, divertido, enérgico y profesional |
+| Marca | **Three Dogs**: estilo canino moderno, divertido, enérgico y profesional |
 | Plataforma | Tableta táctil en **cualquier orientación**, PWA en modo kiosk (Chrome Android / Safari iPadOS, pantalla completa). Mouse también habilitado en producción. |
 | Core loop | "Basketball Flick 2D": el jugador desliza el dedo desde la pelota hacia el aro y la suelta para lanzarla. Partidas de 30/45/60 s (por defecto 45 s) |
 | Entorno | Stand de convención: **100 % offline** después de la primera carga. Cero CDNs, cero fuentes remotas, cero APIs externas |
@@ -336,7 +336,7 @@ Tokens en `:root` (CSS) espejados en `theme.js` (canvas). **Son placeholders**: 
 - **Demo automática**: `DemoPlayer` lanza una pelota cada ~2,2 s con la velocidad ideal de §3.3 (ruido aleatorio de ±6 %, así a veces erra); se usa el mismo motor de física y render.
 - DOM superpuesto:
   - Título **"ThreeBall 2D"** enorme, con un rebote de escala continuo (CSS `@keyframes`) y la pelota de la "O" girando.
-  - Subtítulo/logo **"Three Dogs by Districo"**.
+  - Subtítulo/logo **"Three Dogs"**.
   - Tarjeta **"RÉCORD DE HOY: 42"** (amarillo, pulso suave). Si no hay partidas: "¡Sé el primero en marcar récord!".
   - Mensaje de premio: "Supera **{prizeThreshold}** puntos y **¡gana un premio!**" (se oculta si se agotaron los premios del día).
   - Ticker rotativo con el **Top 5 de hoy** (cambia cada 4 s).
@@ -370,7 +370,7 @@ Tokens en `:root` (CSS) espejados en `theme.js` (canvas). **Son placeholders**: 
    - Título: "¡Déjanos tus datos y participa del sorteo!"
    - **Nombre** (`maxlength=24`, `autocomplete="off"`, `autocapitalize="words"`, `enterkeyhint="next"`)
    - **Teléfono** (`type="tel"`, `inputmode="tel"`, `enterkeyhint="done"`), opcional
-   - Checkbox de **consentimiento** (obligatorio solo si se cargó teléfono): "Acepto que Three Dogs / Districo me contacte por este evento y sus promociones." (Ley 18.331 de Uruguay sobre protección de datos personales)
+   - Checkbox de **consentimiento** (obligatorio solo si se cargó teléfono): "Acepto que Three Dogs me contacte por este evento y sus promociones." (Ley 18.331 de Uruguay sobre protección de datos personales)
    - Botones: **"GUARDAR Y JUGAR DE NUEVO"** (primario), **"GUARDAR"** y **"Saltar"** (secundario, discreto)
    - Validación de teléfono uruguayo, aceptando `09XXXXXXX`, `9XXXXXXX`, `+5989XXXXXXX` y `5989XXXXXXX`, con espacios o guiones. Se normaliza a E.164 `+5989XXXXXXX`. Si es inválido: mensaje inline, sin `alert()`.
    - El nombre pasa por un filtro básico de palabras ofensivas (lista editable en `constants.js`); si coincide, en el ranking se muestra "Jugador #N", pero en el CSV se guarda tal cual.
