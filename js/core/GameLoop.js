@@ -41,13 +41,17 @@ export class GameLoop {
     }
     this.previousTime = timestamp;
     this.steps = 0;
-    while (this.accumulator >= FIXED_DT && this.steps < MAX_STEPS_PER_FRAME) {
-      this.update(FIXED_DT);
-      this.accumulator -= FIXED_DT;
-      this.steps++;
+    // An exception still reaches the global handler, but never stops the next frame.
+    try {
+      while (this.accumulator >= FIXED_DT && this.steps < MAX_STEPS_PER_FRAME) {
+        this.steps++;
+        this.accumulator -= FIXED_DT;
+        this.update(FIXED_DT);
+      }
+      if (this.steps === MAX_STEPS_PER_FRAME && this.accumulator >= FIXED_DT) this.accumulator = 0;
+      this.render(this.accumulator / FIXED_DT);
+    } finally {
+      if (this.running) this.frameId = this.requestFrame(this.frame);
     }
-    if (this.steps === MAX_STEPS_PER_FRAME && this.accumulator >= FIXED_DT) this.accumulator = 0;
-    this.render(this.accumulator / FIXED_DT);
-    if (this.running) this.frameId = this.requestFrame(this.frame);
   }
 }

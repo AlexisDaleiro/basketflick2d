@@ -1,4 +1,5 @@
 import { STATES } from './config/constants.js';
+import { ErrorGuard } from './core/ErrorGuard.js';
 import { EventBus } from './core/EventBus.js';
 import { GameLoop } from './core/GameLoop.js';
 import { IdleWatcher } from './core/IdleWatcher.js';
@@ -57,6 +58,8 @@ for (const name of Object.values(STATES)) {
   else states[name] = new AdminPanel({ root: screens, storage, guard: pinGuard, debug, navigate });
 }
 const machine = new StateMachine({ states, bus, development });
+const errorGuard = new ErrorGuard({ target: window, storage, machine });
+errorGuard.start();
 const adminTrigger = new AdminTrigger({ target: document, debug, onActivate: () => machine.transition(STATES.ADMIN_PANEL) });
 const loop = new GameLoop({
   update: dt => { sceneTime += dt; machine.update(dt); },
@@ -142,6 +145,9 @@ input.start();
 kiosk.start();
 adminTrigger.start();
 reconcile();
+if (window.isSecureContext && navigator.serviceWorker) {
+  navigator.serviceWorker.register('./sw.js').catch(error => storage.recordError(`Service worker: ${error}`, machine.current || ''));
+}
 
 if (debug) {
   import('./debug/DebugOverlay.js').then(({ DebugOverlay }) => {
@@ -165,5 +171,6 @@ window.addEventListener('pagehide', event => {
   kiosk.destroy();
   adminTrigger.destroy();
   sfx.destroy();
+  errorGuard.destroy();
   if (debug) delete window.__TB2D_DEBUG__;
 }, { signal });

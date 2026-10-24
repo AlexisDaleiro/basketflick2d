@@ -2,7 +2,7 @@ import { APP_VERSION } from '../config/constants.js';
 import { es } from '../i18n/es.js';
 import { h, show } from './dom.js';
 
-/** Shows capabilities actually present; H5 does not install a service worker. */
+/** Shows the service worker, cache and storage capabilities actually present. */
 export class SystemStatus {
   /** @param {HTMLElement} root @param {import('../storage/Storage.js').Storage} storage */
   constructor(root, storage) {

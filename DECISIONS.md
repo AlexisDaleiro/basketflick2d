@@ -420,3 +420,71 @@ BORRAR deshabilitada hasta escribir la palabra exacta (luego se canceló).
 No se cambió el PIN real ni se borraron partidas reales. Consola sin errores
 ni warnings. Share nativo, Excel/iPad, gesto sostenido táctil y SW update deben
 comprobarse con sus APIs/dispositivos; no se consideran verificados aquí.
+
+## H6 — PWA y hardening · 23/10/2026
+
+- `sw.js` clásico (no módulo, por compatibilidad con Safari antiguo) con versión
+  `0.6.0` duplicada de `APP_VERSION`; un test exige que coincidan con
+  `package.json`. Lista de precache escrita a mano (72 entradas); otro test falla
+  si falta un archivo de `/js`, `/css` o `/icons` o si se lista uno inexistente.
+  Install usa `cache: 'reload'` para no precachear respuestas viejas del HTTP
+  cache. Activate borra solo caches `tb2d-v*` ajenos a la versión actual.
+- Cache-first. Las navegaciones ignoran la query para que `?debug=1` abra
+  offline, pero no se sirve `index.html` para cualquier ruta: las fixtures de
+  `/tests` siguen yendo a red. Peticiones no GET o de otro origen no se tocan.
+- Sin `skipWaiting` automático ni `clients.claim`: la primera instalación
+  controla la página desde la siguiente carga; las actualizaciones quedan en
+  espera hasta «Actualizar app» (contrato de H5, verificado en navegador).
+- El worker se registra también en localhost para poder probar offline. Costo:
+  en desarrollo hay que usar «Update on reload»/«Bypass for network» o subir la
+  versión. Se prefirió a un registro condicional que dejaría sin probar el camino real.
+- Íconos SVG `any` y `maskable` (zona segura del 80 %), más PNG 192/512,
+  maskable 512 y apple-touch-icon 180 (de la variante maskable, a sangre, porque
+  iOS redondea). `tools/make-icons.html` renderiza los SVG y descarga los PNG.
+  Los PNG de este commit se generaron con Chrome headless sobre los mismos SVG
+  (`--force-device-scale-factor`, porque la ventana headless no baja de ~500 px);
+  el resultado es equivalente. Los íconos no son arte del juego: §1.2 sigue vigente.
+- `ErrorGuard` escucha `error` y `unhandledrejection` en `window`, guarda
+  `{ts, state, msg, stack}` en el ring persistente de 50 y, si el estado era
+  PLAYING (incluida la práctica del admin), transiciona a ATTRACT_MODE: la
+  ronda se descarta como al ocultar la pestaña. Un mismo mensaje repetido con
+  menos de 1 s entre apariciones se guarda una vez por ráfaga, para que un fallo
+  por frame no escriba localStorage 60 veces por segundo ni vacíe el ring.
+- `GameLoop.frame` reprograma el siguiente rAF en `finally`: sin esto, una
+  excepción dentro de update/render detenía el loop para siempre (pantalla
+  congelada aunque el estado cambiara). El paso que falla consume su dt, así no
+  se reintenta en bucle. Un error durante el arranque del módulo (antes de crear
+  la máquina de estados) sigue sin red de seguridad; no hay estado al que volver.
+- Versión 0.6.0, no 1.0.0: faltan las verificaciones en tablet real (abajo).
+
+Soak (criterio §11.2). Test automatizado en `tests/hardening.test.js`: proceso
+hijo con `--expose-gc` que alterna 8 veces 1 h simulada de demo y 25 rondas de
+30 s con tiros reales (8 h + 200 rondas, ~13 000 tiros). Comprueba que los pools
+de pelotas de demo y ronda sean los mismos objetos con 6 elementos y que el
+`old_space` (objetos de vida larga) no crezca más de 128 KiB entre la hora 4 y la 8
+(medido: ~8 KiB). Hallazgo: el heap total sí sube unos cientos de KiB al alternar
+demo y rondas, pero es `code_space`/`trusted_space` (V8 recompila y reoptimiza
+el código que el otro modo dejó inactivo) y se estabiliza; medir sin GC periódico
+mostraba +400 KiB de bytecode aún no envejecido. Por eso el test fuerza GC cada
+hora, como ocurriría en una página real de 8 h. Particles ya tenía su test de pool.
+
+Procedimiento en dispositivo (pendiente, no ejecutado aquí): Chrome remoto
+(`chrome://inspect`) → Memory → Heap snapshot en portada al minuto 5; dejar la
+portada 8 h y jugar 200 rondas; nuevo snapshot y comparar «Comparison»: no deben
+crecer `Ball`, `Particle`, `Array` ni listeners; Performance monitor con «JS heap
+size» debe oscilar en una banda estable y «DOM Nodes»/«JS event listeners» deben
+volver al mismo valor en cada regreso a portada.
+
+Verificación: 121 tests aprobados. En navegador local (Chrome del panel): el SW
+instaló `tb2d-v0.6.0` con 72 entradas y controló la página tras recargar. Con el
+servidor detenido y `fetch` de red fallando, la app recargó desde cache (portada,
+`?debug=1`, admin con PIN, «Cacheado: Sí», módulos CSV cargables). Excepciones
+forzadas: por timer y dentro de `round.step` (en el rAF) durante PLAYING volvieron
+a portada, el loop siguió dibujando, no se guardó partida y ambas aparecieron en
+admin con estado PLAYING; un rechazo de promesa en portada solo quedó registrado.
+Con una versión temporal de `sw.js`, el worker nuevo quedó en espera, «Actualizar
+app» lo activó, recargó y borró el cache anterior; luego se restauró 0.6.0.
+Consola sin errores ni warnings fuera de los forzados y del fetch offline buscado.
+No verificado aquí: Lighthouse (su categoría PWA fue retirada en Lighthouse 12;
+instalabilidad revisada por manifest/SW/HTTPS), 60 fps y soak de 8 h en tablet,
+instalación real en Android/iPad, modo avión real, gestos táctiles y Excel/iPad.

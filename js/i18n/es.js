@@ -25,7 +25,7 @@ export const es = Object.freeze({
   deleteQuestion: 'Se borrarán partidas, leads, configuración y PIN de este navegador. Descarga el CSV antes. Escribe BORRAR para continuar.',
   deleteWord: 'BORRAR', deleteLabel: 'Escribe BORRAR', confirmDelete: 'Borrar definitivamente', deleteFailed: 'No se pudieron borrar todos los datos. Revisa el almacenamiento.',
   system: 'Sistema', updateApp: 'Actualizar app', updateUnavailable: 'No se pudo activar la actualización.', errorLog: 'Últimos 50 errores', copyErrors: 'Copiar errores',
-  noCache: 'Sin Service Worker/cache (H6)', yes: 'Sí', no: 'No', unavailable: 'No disponible',
+  noCache: 'Sin Service Worker/cache', yes: 'Sí', no: 'No', unavailable: 'No disponible',
   systemInfo: (version, cache, offline, bytes, persist, online) => `App: ${version} · Cache: ${cache} · Cacheado: ${offline ? 'Sí' : 'No'} · Almacenamiento: ${bytes} bytes · Persistencia: ${persist} · Red: ${online ? 'conectada' : 'desconectada'}`,
   record: score => `RÉCORD DE HOY: ${score}`,
   firstRecord: '¡Sé el primero en marcar récord!',

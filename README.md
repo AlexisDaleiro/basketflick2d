@@ -1,6 +1,7 @@
-# ThreeBall 2D · H5 + POV frontal
+# ThreeBall 2D · H6 (PWA) + POV frontal
 
-Ronda jugable en HTML, CSS y JavaScript ES2020, sin bundler ni dependencias.
+Juego kiosk en HTML, CSS y JavaScript ES2020, sin bundler ni dependencias.
+Se instala como PWA y funciona sin conexión después de la primera carga.
 Requiere Node.js 20 o posterior para las herramientas locales.
 
 ## Correr en local
@@ -88,10 +89,12 @@ lo admite, copiar y texto de solo lectura como último recurso. Verifica el
 archivo recibido antes de borrar datos, especialmente en iPad standalone.
 
 Sistema muestra versión, cache/SW realmente disponible, persistencia, bytes y
-los últimos 50 errores con opción de copia. En H5 aún no se instala un Service
-Worker: es normal ver «Sin Service Worker/cache (H6)». Si existe un worker en
-espera, «Actualizar app» solicita `SKIP_WAITING` y recarga al activarse, siempre
-por ese botón. El worker y el registro global de errores llegan en H6.
+los últimos 50 errores con opción de copia. Cualquier excepción no capturada o
+promesa rechazada se registra ahí con el estado en que ocurrió; si pasa durante
+una ronda, la ronda se descarta sin guardar y se vuelve a la portada. Un error que
+se repite en cada frame se guarda una vez por ráfaga. Cuando hay una versión nueva
+publicada, el worker nuevo queda en espera y aparece «Actualizar app»: solo ese
+botón la activa (`SKIP_WAITING`) y recarga la página.
 
 Para pruebas aisladas usa `/tests/h5-preview.html` (datos ficticios en memoria).
 `?pin=1` muestra el PIN; `?fallback=1` simula descarga/clipboard bloqueados;
@@ -153,38 +156,74 @@ Abre http://127.0.0.1:5173/?debug=1 y entra a jugar. Verás:
 - Tecla **R**: reiniciar la ronda desde la cuenta regresiva; **A**: abrir admin.
 
 Sin `?debug=1` no se carga el módulo de debug, no hay objeto global, trayectoria,
-overlay ni atajos. El anillo del disparador secreto se conectará en H5, cuando
-ese disparador exista. El render actual incluye arena, huellas en movimiento,
-luces, cancha, pelota con costuras y rotación, aro por capas, red con resorte,
-partículas, llamas e indicador de pelota fuera de pantalla por arriba.
+overlay ni atajos. En debug el disparador secreto dibuja su anillo de progreso.
 
-Las duraciones 30/45/60 s, el aro móvil en los últimos diez segundos y sonido
-están preparados en `Round.settings`; sus controles persistentes pertenecen a H5.
-En debug puedes cambiar, por ejemplo,
-`window.__TB2D_DEBUG__.round.settings.movingHoop = true` desde DevTools y pulsar R.
-`soundEnabled = false` y R inicia la siguiente ronda silenciada.
+Duración, aro móvil y sonido se configuran desde admin. Para forzar una excepción
+de prueba durante una ronda, en `?debug=1` ejecuta desde DevTools mientras juegas:
+`setTimeout(() => { throw new Error('prueba') })`. Debe volver a la portada sin
+pantalla en blanco y el error debe aparecer en admin → Sistema.
 
-## Deploy estático bajo HTTPS
+## Offline y Service Worker
 
-La carpeta puede publicarse en GitHub Pages o Netlify sin compilación.
-HTTPS será necesario para Service Worker, Wake Lock y `crypto.subtle`.
-H5 todavía **no implementa instalación PWA ni funcionamiento offline**; llegan en H6.
+`sw.js` precachea una lista explícita de archivos (shell, manifest, todo `/js`,
+`/css` e `/icons`) en `tb2d-v<APP_VERSION>` con estrategia cache-first. Un test
+falla si se agrega un archivo a esas carpetas sin sumarlo a la lista.
+Al publicar cambios, sube la versión en `APP_VERSION`, `package.json` y `VERSION`
+de `sw.js` (un test exige que coincidan): sin ese cambio las tablets siguen con
+la versión cacheada. En desarrollo local el worker también se registra; para ver
+ediciones sin subir versión usa DevTools → Application → Service Workers →
+«Update on reload» o «Bypass for network».
 
-## Instalar como PWA (a partir de H6)
+Para probar offline en local: abre la app una vez, recarga (la página queda
+controlada por el worker), detén `npm run dev` o activa «Offline» en DevTools y
+vuelve a recargar. Portada, ronda, admin y CSV funcionan sin red. `?debug=1`
+también abre offline.
 
-Android: Chrome → «Instalar app». iPad: Safari → Compartir → «Añadir a pantalla de inicio».
-Estas instrucciones se verificarán con el manifest y los íconos de H6.
+## Deploy estático gratis bajo HTTPS
+
+La carpeta se publica tal cual, sin compilación. HTTPS es obligatorio para
+Service Worker, Wake Lock y `crypto.subtle`.
+
+- **GitHub Pages**: sube el repositorio, Settings → Pages → «Deploy from a branch»,
+  rama `main`, carpeta `/ (root)`. Funciona también bajo una subruta
+  (`usuario.github.io/repo/`) porque todas las rutas son relativas.
+- **Netlify**: «Add new site» → «Deploy manually» y arrastra la carpeta, o conecta
+  el repositorio sin comando de build y con directorio de publicación `.`.
+
+## Instalar como PWA
+
+- **Android (Chrome)**: abre la URL HTTPS, espera a que cargue la portada y usa
+  menú ⋮ → «Instalar app». Se abre a pantalla completa con ícono propio.
+- **iPad (Safari)**: Compartir → «Añadir a pantalla de inicio». Abre sin barra
+  de Safari. Los datos de la app instalada son independientes de los de Safari.
+
+Después de instalar, abre la app una vez con red para completar el precache.
+En admin → Sistema debe verse `Cache: tb2d-v0.6.0 · Cacheado: Sí`.
+
+Los íconos son SVG (`icons/icon.svg`, `icons/icon-maskable.svg`) más PNG
+192/512/180. Si cambias los SVG, abre `/tools/make-icons.html`, descarga los
+cuatro PNG y reemplázalos en `/icons`.
 
 ## Bloquear la tablet
 
-Para el stand, habilita **Fijar pantalla** en Android o **Acceso Guiado** en iPadOS.
-El bloqueo de gestos de la página no reemplaza estos controles del dispositivo.
+- **Android**: Ajustes → Seguridad → «Fijar pantalla» (o «Fijación de apps»),
+  abre la app y fíjala desde Recientes. Pide PIN para soltarla.
+- **iPadOS**: Ajustes → Accesibilidad → «Acceso Guiado», actívalo con código;
+  abre la app y pulsa tres veces el botón lateral/superior para iniciarlo.
 
-## Día del evento (producto completo)
+El bloqueo de gestos de la página y el botón «atrás» interceptado no reemplazan
+estos controles del dispositivo.
 
-Verificar modo avión después de cargar, brillo al máximo, carga conectada,
-PIN cambiado y descarga del CSV al cierre de cada jornada. Estas pruebas
-dependen de H6 y de la prueba sostenida en tablet; todavía no se considera listo para el stand.
+## Checklist del día del evento
+
+1. Con red, abre la app instalada y confirma en admin → Sistema «Cacheado: Sí».
+2. Activa **modo avión** y recarga/reabre: la portada debe aparecer igual.
+3. **Brillo al máximo** y bloqueo automático de pantalla desactivado.
+4. **Cargador conectado** todo el día.
+5. **PIN cambiado** (no dejar 1234) y nombre de evento/etiqueta de tablet cargados.
+6. Fija la pantalla (Android) o inicia Acceso Guiado (iPad).
+7. Al cierre de cada jornada: admin → «Descargar CSV · Solo hoy», y verifica
+   que el archivo abra antes de reiniciar el ranking o borrar datos.
 
 ## Calibración posterior
 
@@ -193,7 +232,6 @@ sensibilidad inicial = 1,00, G = 2600 u/s² y asistencia inicial = 0,15.
 Para el POV frontal también están FRONTAL_LIFT_GAIN = 0,82 y
 FRONTAL_DEPTH_GAIN = 0,55. La geometría vigente se documenta en §13 de la especificación.
 Conviene calibrar GAIN y sensibilidad con gestos reales en tableta antes de tocar
-la gravedad. El umbral de premio se calibrará con rondas reales al implementar
-la administración; su valor inicial es 24 puntos. «Probar tiro» permite ajustar
+la gravedad. El umbral de premio (24 puntos inicial) se ajusta desde admin tras rondas reales. «Probar tiro» permite ajustar
 la sensibilidad sin contaminar las estadísticas. Mantén G = 2600 u/s² como
 referencia y calibra primero GAIN/sensibilidad con gestos reales.
