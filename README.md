@@ -21,11 +21,17 @@ Recorrido: «¡TOCA AQUÍ PARA JUGAR!» → 3, 2, 1, ¡YA! → ronda de **45 s**
 «¡TIEMPO!» → resumen con puntaje, estadísticas y formulario → «GUARDAR Y JUGAR
 DE NUEVO», «GUARDAR» o «Saltar».
 Cada paso de la cuenta dura 700 ms; la pelota se ve pero no puede lanzarse hasta
-terminar «¡YA!». Mantén el logo superior derecho **3 segundos**, sin moverte
+terminar «¡YA!». Todas las pantallas del jugador llevan arriba el logo de
+**Three Dogs** a la izquierda, el nombre del juego al centro y el de **Three Cats**
+a la derecha (logos oficiales en `assets/brand/`). Mantén el logo de Three Cats **3 segundos**, sin moverte
 más de 20 px, o tócalo **5 veces en 2 segundos** para abrir el PIN del staff.
 Un toque normal no hace nada. El PIN inicial es **1234**, ingresado con el teclado
 numérico propio; «Cancelar» o «Salir» vuelve a portada. Abrir admin durante una
 ronda la descarta sin guardar.
+
+La arena muestra la grada de mascotas, una banda LED con beneficios publicados
+en threepetfood.com.br (`es.ledBenefits`), bolsas de producto e ingredientes de las
+recetas pintados en la cancha (`es.ingredients`).
 
 La portada muestra una demo silenciosa con tiros cada 2,2 s, el récord diario,
 la invitación al premio y un ticker del Top 5 cada 4 s. El resultado se guarda
@@ -33,9 +39,11 @@ la invitación al premio y un ticker del Top 5 cada 4 s. El resultado se guarda
 o dejar vencer el idle conserva la partida anónima. Al guardar el nombre se
 actualiza ese mismo registro, sin duplicarlo; el agradecimiento dura 2,5 s.
 
-El teléfono es opcional. Acepta `098123456`, `98123456`, `+59898123456` o
-`59898123456`, con espacios o guiones, y lo guarda como `+59898123456`.
-Para guardar teléfono se exige el consentimiento; los errores aparecen inline.
+El celular y el correo electrónico son opcionales. El celular acepta `098123456`,
+`98123456`, `+59898123456` o `59898123456`, con espacios o guiones, y lo guarda como
+`+59898123456`. El correo se guarda en minúsculas y debe tener dominio, por ejemplo
+`nombre@correo.com`. Para guardar celular o correo se exige el consentimiento;
+los errores aparecen inline.
 El nombre admite hasta 24 caracteres y puede quedar vacío (jugador anónimo).
 El filtro de nombres del ranking está en `OFFENSIVE_WORDS`; conserva el original
 en el registro para la exportación CSV.
@@ -74,7 +82,7 @@ puede verificarse por falta de API, se muestra un error; no se convierte ni se
 acepta otro PIN. **Es una medida disuasoria local, no seguridad real**: quien
 controle DevTools o los datos del navegador puede alterar el acceso.
 
-El Top 20 muestra teléfono enmascarado y permite marcar cada premio «Entregado».
+El Top 20 muestra celular y correo enmascarados y permite marcar cada premio «Entregado».
 Los contadores diarios e históricos incluyen partidas, leads y premios.
 «Reiniciar ranking diario» requiere una segunda confirmación: oculta las
 partidas anteriores sin borrarlas y no repone el stock de premios.
@@ -82,7 +90,7 @@ partidas anteriores sin borrarlas y no repone el stock de premios.
 restablece también configuración y PIN; actúa solo sobre las claves `tb2d.*`.
 
 «Descargar CSV · Solo hoy» y «Todo el evento» preparan el archivo con nombre
-de evento/tablet actuales. El CSV usa UTF-8 con BOM, `;`, CRLF, teléfono local
+de evento/tablet actuales. El CSV incluye la columna `email` tras `telefono` y usa UTF-8 con BOM, `;`, CRLF, teléfono local
 con espacios y protección contra fórmulas. Incluye las partidas ocultadas del
 ranking y los nombres originales. Ofrece descarga, compartir archivo si la API
 lo admite, copiar y texto de solo lectura como último recurso. Verifica el
@@ -115,16 +123,19 @@ los tiros cortos o desviados siguen fallando.
 
 La pelota rebota en aro, tablero y piso. Un contacto de aro/tablero muestra un
 destello; al rebotar hacia la cámara, la pelota vuelve a crecer. Una canasta
-confirmada muestra la pelota cayendo por la red durante 450 ms, movimiento de
-la red, mensaje y puntos. Una canasta suma **+2**, un swish **+3**.
+confirmada cae con física real: la red la frena y la centra mientras se deforma
+a su alrededor (en ≤450 ms ya salió), luego cae, rebota en el piso con un golpe
+sordo y se desvanece hasta los 1,4 s. Los golpes de aro balancean la red. Suena la
+red y la grada de mascotas detrás del aro festeja (salta, levanta las patas, ruge,
+ladra y maúlla). Una canasta suma **+2**, un swish **+3**.
 Desde la tercera canasta consecutiva cada una suma **+1 extra**, con medidor,
 estela de llamas y ladrido procedural; un fallo corta la racha. Los tiros se
 puntúan en el orden en que se resuelven.
 
 Una nueva pelota aparece 450 ms después de lanzar, en una posición aleatoria
 entre 380 y 700 u, mientras haya menos de tres en vuelo y un hueco en el pool.
-Las pelotas falladas siguen su física y se desvanecen durante 600 ms; las
-encestadas completan la caída visual y luego se desvanecen hasta los 600 ms. El pool
+Las pelotas falladas siguen su física y se desvanecen durante 600 ms. Si el pool
+está lleno, la pelota resuelta más antigua se recicla para no demorar el spawn. El pool
 tiene seis pelotas y el de partículas doscientas; no crecen con las rondas.
 
 Al llegar a cero se impiden nuevos lanzamientos y se muestra «¡TIEMPO!» al menos
@@ -198,7 +209,7 @@ Service Worker, Wake Lock y `crypto.subtle`.
   de Safari. Los datos de la app instalada son independientes de los de Safari.
 
 Después de instalar, abre la app una vez con red para completar el precache.
-En admin → Sistema debe verse `Cache: tb2d-v0.6.3 · Cacheado: Sí`.
+En admin → Sistema debe verse `Cache: tb2d-v0.7.0 · Cacheado: Sí`.
 
 Los íconos son SVG (`icons/icon.svg`, `icons/icon-maskable.svg`) más PNG
 192/512/180. Si cambias los SVG, abre `/tools/make-icons.html`, descarga los

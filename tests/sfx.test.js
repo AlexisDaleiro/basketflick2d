@@ -33,7 +33,7 @@ test('Sfx stays silent when Web Audio is unavailable, denied, locked or disabled
   await retry.sfx.unlock(); retry.sfx.play('tick'); assert.equal(retry.sources.length, 1);
 });
 
-test('Sfx enforces eight voices, releases ended sources and sets master volume to 0.6', async () => {
+test('Sfx enforces its voice limit, releases ended sources and sets master volume to 0.6', async () => {
   const { sfx, sources } = audioFixture(); await sfx.unlock();
   assert.equal(sfx.master.gain.value, SFX_MASTER_VOLUME);
   for (let i = 0; i < SFX_MAX_VOICES + 5; i++) sfx.play('tick');
@@ -45,7 +45,7 @@ test('Sfx enforces eight voices, releases ended sources and sets master volume t
 
 test('Sfx synthesizes every required effect and safely pauses, resumes and destroys', async () => {
   const { sfx, context, sources } = audioFixture(); await sfx.unlock();
-  for (const [type, value] of [['swish', 0], ['sfx:rim', 500], ['sfx:board', 800], ['countdown', 3], ['buzzer', 0], ['fire', 0]]) {
+  for (const [type, value] of [['swish', 0], ['sfx:rim', 500], ['sfx:board', 800], ['countdown', 3], ['buzzer', 0], ['fire', 0], ['cheer', 1], ['sfx:floor', 900]]) {
     sfx.stop(); const count = sources.length; sfx.play(type, value); assert.ok(sources.length > count, type);
   }
   await sfx.pause(); assert.equal(context.state, 'suspended');

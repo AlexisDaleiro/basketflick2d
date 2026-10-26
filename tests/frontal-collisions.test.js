@@ -47,7 +47,7 @@ test('Over-the-board shots are occluded by the board when descending behind it',
   ball.depth = world.hoop.depth; assert.equal(ballLayer(ball, world.hoop), 'inside-hoop');
 });
 
-test('Confirmed swish visibly drops through the net, stays opaque for 450 ms and then returns to the pool', () => {
+test('Confirmed swish is braked and centered by the net, drops out opaque, bounces and then returns to the pool', () => {
   const { world, ball, resolutions } = shoot(2700);
   for (let i = 0; i < 960 && !ball.shot.resolved; i++) world.step();
   assert.equal(ball.outcome, 'basket'); assert.equal(ball.points, 3);
@@ -57,7 +57,12 @@ test('Confirmed swish visibly drops through the net, stays opaque for 450 ms and
   assert.ok(ball.position.y > startY); assert.ok(ball.position.y - ball.radius > world.hoop.rimY + C.FRONTAL_NET_DEPTH);
   assert.equal(ballLayer(ball, world.hoop), 'inside-hoop');
   assert.equal(ball.touchedRim, contactCount); assert.equal(resolutions(), 1);
-  for (let i = 0; i < 60; i++) world.step();
+  assert.ok(Math.abs(ball.position.x - world.hoop.centerX) < ball.radius / 2, 'the net funnels the ball onto the hoop axis');
+  let bounced = false;
+  for (let i = 0; i < Math.round((C.FRONTAL_BASKET_LIFE_MS - C.FRONTAL_BASKET_DROP_MS) / (C.FIXED_DT * 1000)) + 2; i++) {
+    world.step(); if (ball.velocity.y < 0) bounced = true;
+  }
+  assert.ok(bounced, 'the ball bounces on the floor after leaving the net');
   assert.equal(ball.state, 'inactive'); assert.equal(world.activeCount, 0);
 });
 

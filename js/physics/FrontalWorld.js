@@ -8,8 +8,19 @@ export class FrontalWorld extends World {
   /** @param {ConstructorParameters<typeof World>[0]} [options] */
   constructor(options = {}) {
     super(options); this.hoop = new FrontalHoop(); this.judge = new FrontalShotJudge();
+    this.netDrag = Math.exp(-C.FRONTAL_NET_DRAG * C.FIXED_DT); this.netSpinDrag = Math.exp(-C.FRONTAL_NET_SPIN_DRAG * C.FIXED_DT);
     this.contact.nz = 0;
     for (const ball of this.balls) { ball.radius = C.FRONTAL_BALL_RADIUS; ball.grabRadius = C.FRONTAL_GRAB_RADIUS; }
+  }
+
+  /** A full pool recycles the oldest resolved ball, so lingering baskets never delay the next spawn. @param {number} x u. @param {number} y u. @returns {import('../game/Ball.js').Ball|null} */
+  spawn(x, y) {
+    const ball = super.spawn(x, y); if (ball) return ball;
+    let oldest = null;
+    for (const candidate of this.balls) if (candidate.state === 'dead' && (!oldest || candidate.resolvedAt < oldest.resolvedAt)) oldest = candidate;
+    if (!oldest) return null;
+    oldest.state = 'inactive'; oldest.opacity = 0; this.activeCount--;
+    return super.spawn(x, y);
   }
 
   /** @param {import('../game/Ball.js').Ball} ball @param {number} dx @param {number} dy @param {number} dz @param {number} distance @param {number} combinedRadius @returns {boolean} */
@@ -69,9 +80,9 @@ export class FrontalWorld extends World {
     ball.velocity.x = -e * vn * c.nx + (1 - friction) * (vx - vn * c.nx);
     ball.velocity.y = -e * vn * c.ny + (1 - friction) * (vy - vn * c.ny) + colliderY;
     ball.depthVelocity = -e * vn * c.nz + (1 - friction) * (vz - vn * c.nz);
-    if (type !== 'floor' && this.timeMs - ball.lastContactAt >= C.CONTACT_COOLDOWN_MS) {
+    if ((type !== 'floor' || -vn >= C.FLOOR_SOUND_MIN_SPEED) && this.timeMs - ball.lastContactAt >= C.CONTACT_COOLDOWN_MS) {
       ball.lastContactAt = this.timeMs;
-      this.contactEvent.type = type === 'rim' ? 'sfx:rim' : 'sfx:board';
+      this.contactEvent.type = type === 'rim' ? 'sfx:rim' : type === 'board' ? 'sfx:board' : 'sfx:floor';
       this.contactEvent.intensity = -vn; this.contactEvent.ball = ball; this.onContact?.(this.contactEvent);
     }
   }
@@ -95,28 +106,33 @@ export class FrontalWorld extends World {
         this.resolveSphere(ball, 'floor');
       }
       if (this.judge.evaluate(ball, this.hoop, this.timeMs)) {
-        if (ball.outcome === 'basket') {
-          ball.basketStartX = ball.position.x; ball.basketStartY = ball.position.y; ball.basketStartDepth = ball.depth;
-        }
+        if (ball.outcome === 'basket') ball.spin = ball.depthVelocity / ball.radius;
         this.onResolve?.(ball);
       }
       if (ball.state === 'dead') { ball.fade(this.timeMs); if (ball.state === 'inactive') this.activeCount--; }
     }
   }
 
-  /** Scoring is already final: visually settle into and drop through the net before fading. @param {import('../game/Ball.js').Ball} ball @returns {void} */
+  /** Scoring is already final: the net brakes the ball and funnels it onto the hoop axis, then it drops out, bounces and fades. @param {import('../game/Ball.js').Ball} ball @returns {void} */
   animateBasket(ball) {
     const age = this.timeMs - ball.resolvedAt;
-    const progress = Math.min(1, age / C.FRONTAL_BASKET_DROP_MS);
-    const ease = progress * progress * (3 - 2 * progress);
     ball.previous.copy(ball.position); ball.previousDepth = ball.depth;
-    ball.position.x = ball.basketStartX + (this.hoop.centerX - ball.basketStartX) * ease;
-    const exitY = this.hoop.rimY + C.FRONTAL_NET_DEPTH + ball.radius * C.FRONTAL_BASKET_EXIT_RADIUS;
-    ball.position.y = ball.basketStartY + (exitY - ball.basketStartY) * progress;
-    ball.depth = ball.basketStartDepth + (this.hoop.depth - ball.basketStartDepth) * ease;
-    ball.angle += C.FIXED_DT * Math.PI;
-    ball.opacity = age <= C.FRONTAL_BASKET_DROP_MS ? 1
-      : Math.max(0, (C.DEAD_FADE_MS - age) / (C.DEAD_FADE_MS - C.FRONTAL_BASKET_DROP_MS));
-    if (age >= C.DEAD_FADE_MS) { ball.state = 'inactive'; this.activeCount--; }
+    ball.velocity.y += this.gravity * C.FIXED_DT;
+    if (ball.position.y < this.hoop.rimY + C.FRONTAL_NET_DEPTH + ball.radius * C.FRONTAL_NET_GRIP) {
+      const pull = C.FRONTAL_NET_PULL * C.FIXED_DT;
+      ball.velocity.x += (this.hoop.centerX - ball.position.x) * pull;
+      ball.depthVelocity += (this.hoop.depth - ball.depth) * pull;
+      ball.velocity.scale(this.netDrag); ball.depthVelocity *= this.netDrag; ball.spin *= this.netSpinDrag;
+    } else { ball.velocity.scale(this.dragFactor); ball.depthVelocity *= this.dragFactor; }
+    ball.position.x += ball.velocity.x * C.FIXED_DT; ball.position.y += ball.velocity.y * C.FIXED_DT;
+    ball.depth += ball.depthVelocity * C.FIXED_DT; ball.angle += ball.spin * C.FIXED_DT;
+    const penetration = ball.position.y + ball.radius - C.FLOOR_Y;
+    if (penetration > 0) {
+      this.contact.nx = 0; this.contact.ny = -1; this.contact.nz = 0; this.contact.penetration = penetration;
+      this.resolveSphere(ball, 'floor'); ball.spin *= C.FRONTAL_FLOOR_SPIN_KEEP;
+    }
+    ball.opacity = age <= C.FRONTAL_BASKET_FADE_MS ? 1
+      : Math.max(0, (C.FRONTAL_BASKET_LIFE_MS - age) / (C.FRONTAL_BASKET_LIFE_MS - C.FRONTAL_BASKET_FADE_MS));
+    if (age >= C.FRONTAL_BASKET_LIFE_MS) { ball.state = 'inactive'; this.activeCount--; }
   }
 }

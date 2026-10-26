@@ -2,7 +2,8 @@ import * as C from '../config/constants.js';
 import { FrontalWorld } from '../physics/FrontalWorld.js';
 import { FlickTracker } from '../input/FlickTracker.js';
 import { calculateFrontalLaunch } from '../input/frontalLaunch.js';
-import { ballLayer } from '../render/visibility.js';
+import { ballInNet, ballLayer } from '../render/visibility.js';
+import { crowd } from '../render/crowd.js';
 import { drawBoard, drawNet, drawRim } from '../render/draw/hoop.js';
 import { drawBall, drawBallShadow } from '../render/draw/ball.js';
 
@@ -10,7 +11,9 @@ import { drawBall, drawBallShadow } from '../render/draw/ball.js';
 export class DemoPlayer {
   /** @param {()=>number} [random] */
   constructor(random = Math.random) {
-    this.random = random; this.world = new FrontalWorld(); this.result = new FlickTracker().result;
+    this.random = random; this.result = new FlickTracker().result;
+    // Silent, but the stands still celebrate demo baskets.
+    this.world = new FrontalWorld({ onResolve: ball => { if (ball.outcome === 'basket') crowd.cheer(C.CROWD_CHEER_DEMO); } });
     this.renderOrder = this.world.balls.slice();
     this.settings = { sensitivity: C.DEFAULT_SENSITIVITY, aimAssist: C.DEFAULT_AIM_ASSIST };
     this.swipe = { x: 0, y: 0 }; this.nextShotAt = 0;
@@ -43,7 +46,7 @@ export class DemoPlayer {
     for (const ball of this.renderOrder) if (ballLayer(ball, world.hoop) === 'behind-board') drawBall(ctx, ball, world.timeMs);
     drawBoard(ctx, world.hoop); drawRim(ctx, world.hoop, false);
     for (const ball of this.renderOrder) if (ballLayer(ball, world.hoop) === 'inside-hoop') drawBall(ctx, ball, world.timeMs);
-    drawNet(ctx, world.hoop, 0); drawRim(ctx, world.hoop, true);
+    drawNet(ctx, world.hoop, 0, 0, ballInNet(world.balls, world.hoop)); drawRim(ctx, world.hoop, true);
     for (const ball of this.renderOrder) if (ballLayer(ball, world.hoop) === 'foreground') drawBall(ctx, ball, world.timeMs);
   }
 }

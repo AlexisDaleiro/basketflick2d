@@ -8,11 +8,14 @@
   --c-lilac: #9B72ED;
   --c-red: #DC2626;
   --c-white: #FFFFFF;
+  /* Friendly arena night tones derived from the brand purple. */
+  --c-plum: #3A2766;
+  --c-night: #221539;
   color-scheme: dark;
   font-family: "Arial Black", "Helvetica Neue", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   font-weight: 900;
   color: var(--c-white);
-  background: var(--c-ink);
+  background: var(--c-night);
 }
 * { box-sizing: border-box; }
 html, body {
@@ -68,16 +71,22 @@ button:focus-visible { outline: 4px solid var(--c-lilac); outline-offset: 3px; }
 }
 .hud {
   position: absolute; inset: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) auto max(12px, env(safe-area-inset-left));
-  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(96px, 1fr); align-items: start; gap: 4px 8px;
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr) auto; align-items: center; gap: 2px 8px;
+  grid-template-areas: "dogs points title clock cats" "dogs points meter clock cats";
   filter: drop-shadow(0 3px 0 var(--c-ink));
 }
 .hud-label { display: block; color: var(--c-white); font-size: clamp(10px, 2vw, 16px); letter-spacing: .12em; }
-.hud strong { display: block; font-size: clamp(34px, 7vw, 64px); line-height: 1.1; color: var(--c-gold); }
-.hud-clock { text-align: center; }
-.hud .hud-brand { justify-self: end; width: 96px; height: 96px; min-height: 96px; padding: 7px; margin: 0; border-radius: 20px; border: 3px solid var(--c-ink); background: var(--c-ink-2); color: var(--c-gold); }
-.hud-brand svg { width: 100%; display: block; }
-.streak-meter { grid-column: 1 / 4; display: flex; align-items: center; gap: 4px; margin-top: -5px; }
-.streak-paw { width: 20px; height: 20px; color: var(--c-ink-2); }
+.hud strong { display: block; font-size: clamp(28px, 6vmin, 58px); line-height: 1.05; color: var(--c-gold); }
+.hud-points { grid-area: points; text-align: center; }
+.hud-clock { grid-area: clock; text-align: center; }
+/* In play the brand row shares one line with score and clock, clear of the backboard. */
+.hud .brand-bar { display: contents; }
+.hud .brand-dogs { grid-area: dogs; }
+.hud .brand-cats { grid-area: cats; }
+.hud .brand-card { width: clamp(68px, 12vmin, 120px); }
+.hud .brand-title { grid-area: title; align-self: end; font-size: clamp(14px, 3.2vmin, 28px); }
+.streak-meter { grid-area: meter; justify-self: center; align-self: start; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 4px; }
+.streak-paw { width: 22px; height: 22px; color: rgb(255 255 255 / 25%); }
 .streak-paw svg { width: 100%; height: 100%; }
 .streak-paw.lit { color: var(--c-gold); }
 .streak-label { margin-left: 5px; font-size: clamp(9px, 1.5vw, 13px); }
@@ -87,7 +96,7 @@ button:focus-visible { outline: 4px solid var(--c-lilac); outline-offset: 3px; }
 .round-countdown.buzzer { font-size: clamp(40px, 9vw, 96px); }
 .count-in { animation: count-in .7s ease-out; }
 .round-feedback { position: absolute; top: 47%; left: 0; right: 0; margin: 0; text-align: center; font-size: clamp(20px, 4vw, 40px); color: var(--c-lilac); text-shadow: 3px 4px 0 var(--c-ink); }
-.score-float { position: absolute; top: 60px; left: 24px; font-size: 36px; color: var(--c-lilac); }
+.score-float { position: absolute; top: 18%; left: 22%; font-size: 36px; color: var(--c-lilac); }
 .float-up { animation: float-up 1s ease-out forwards; }
 .score-bump { animation: score-bump .25s ease-out; }
 .hud .critical { color: var(--c-red); animation: time-pulse 1s ease-in-out infinite; }
@@ -117,11 +126,18 @@ button:focus-visible { outline: 4px solid var(--c-lilac); outline-offset: 3px; }
   h1 { font-size: 32px; }
   .actions { gap: 8px; }
 }
-.screen-brand { position: absolute; right: max(12px, env(safe-area-inset-right)); top: max(12px, env(safe-area-inset-top)); width: 96px; height: 96px; padding: 8px; background: var(--c-ink-2); color: var(--c-gold); z-index: 2; }
-.screen-brand svg { width: 100%; display: block; }
+.screen-brand { position: absolute; right: max(12px, env(safe-area-inset-right)); top: max(12px, env(safe-area-inset-top)); z-index: 2; }
+/* Brand row: Three Dogs left, small game title, Three Cats right (the hidden staff trigger). */
+.brand-bar { grid-column: 1 / -1; width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+.brand-card {
+  display: grid; place-items: center; width: clamp(80px, 15vmin, 136px); height: auto; min-height: 0; aspect-ratio: 26 / 21;
+  margin: 0; padding: 7px 9px; background: var(--c-white); border: 4px solid var(--c-ink); border-radius: 22px; box-shadow: 0 5px 0 var(--c-ink);
+}
+.brand-card img { display: block; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+.brand-title { margin: 0; text-align: center; white-space: nowrap; font-size: clamp(18px, 4.4vmin, 40px); line-height: 1; letter-spacing: -.03em; color: var(--c-white); text-shadow: 3px 4px 0 var(--c-ink); }
 .attract-screen { position: absolute; inset: 0; text-align: center; }
-.attract-heading { position: absolute; top: max(24px, env(safe-area-inset-top)); left: 16px; right: 120px; }
-.attract-title { font-size: clamp(32px, 7vw, 68px); animation: title-bounce 2.4s ease-in-out infinite; }
+.attract-heading { position: absolute; top: max(16px, env(safe-area-inset-top)); left: max(16px, env(safe-area-inset-left)); right: max(16px, env(safe-area-inset-right)); width: auto; }
+.attract-heading .brand-title { animation: title-bounce 2.4s ease-in-out infinite; }
 .title-ball { display: inline-block; width: .65em; height: .65em; margin: 0 .12em; color: var(--c-yellow); vertical-align: baseline; animation: title-spin 8s linear infinite; }
 .title-ball svg { display: block; width: 100%; }
 @keyframes title-spin { to { transform: rotate(360deg); } }
@@ -136,11 +152,13 @@ button:focus-visible { outline: 4px solid var(--c-lilac); outline-offset: 3px; }
 @keyframes cta-wave { to { transform: scale(1.12); opacity: 0; } }
 @keyframes title-bounce { 50% { transform: scale(1.04); } }
 @keyframes record-pulse { 50% { filter: brightness(1.12); } }
-.result-screen { position: absolute; inset: 0; pointer-events: auto; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; background: rgb(0 0 0 / 20%); }
+.result-screen { position: absolute; inset: 0; pointer-events: auto; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; background: rgb(34 21 57 / 84%); }
 .result-screen * { touch-action: pan-y; }
 .result-screen input, .result-screen button { touch-action: manipulation; }
 .result-content { max-width: 700px; margin: auto; padding: max(28px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(28px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left)); display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
-.result-content h1 { font-size: clamp(30px, 6vw, 54px); padding: 0 88px; }
+.result-content h1 { font-size: clamp(30px, 6vw, 54px); }
+.result-content .brand-bar { margin-bottom: 8px; }
+.result-content .brand-title { font-size: clamp(16px, 3.6vmin, 30px); }
 .final-score { font-size: clamp(64px, 13vw, 100px); line-height: 1; color: var(--c-gold); }
 .result-rank { margin: 0; color: var(--c-lilac); }
 .prize-card { width: 100%; padding: 14px; background: var(--c-gold); color: var(--c-ink); border: 4px solid var(--c-ink); border-radius: 24px; box-shadow: 5px 6px 0 var(--c-ink-2); }

@@ -3,7 +3,7 @@ import { es } from '../i18n/es.js';
 import { DemoPlayer } from '../game/DemoPlayer.js';
 import { publicName, dayKey } from '../storage/ranking.js';
 import { h, show } from './dom.js';
-import { brandButton } from './brandButton.js';
+import { brandBar } from './brandButton.js';
 
 export class AttractScreen {
   /** @param {{root:HTMLElement,storage:import('../storage/Storage.js').Storage,navigate:(state:string)=>void}} options */
@@ -11,20 +11,14 @@ export class AttractScreen {
     this.storage = storage; this.navigate = navigate; this.demo = new DemoPlayer(); this.elapsed = 0;
     this.panel = h('section', 'attract-screen'); this.panel.dataset.state = STATES.ATTRACT_MODE;
     this.panel.setAttribute('aria-label', es.title);
-    this.admin = brandButton();
-    const header = h('div', 'attract-heading');
-    const title = h('h1', 'attract-title'); title.setAttribute('aria-label', es.title);
-    const [wordmark, dimension] = es.title.split(' ');
-    const ball = h('span', 'title-ball'); ball.setAttribute('aria-hidden', 'true');
-    ball.append(new DOMParser().parseFromString('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60"><circle cx="30" cy="30" r="26" fill="currentColor" stroke="#000000" stroke-width="4"/><path d="M4 30h52M30 4v52M12 12q36 18 36 36M48 12q-36 18-36 36" fill="none" stroke="#000000" stroke-width="3"/></svg>', 'image/svg+xml').documentElement);
-    title.append(h('span', '', wordmark), ball, h('span', '', dimension));
-    header.append(title);
+    const { bar, admin } = brandBar('h1'); this.admin = admin;
+    bar.classList.add('attract-heading');
     this.record = h('p', 'record-card');
     this.prize = h('p', 'prize-invitation'); this.ticker = h('p', 'top-ticker');
     this.start = h('button', 'primary attract-cta', es.start); this.start.type = 'button';
     const footer = h('div', 'attract-actions');
     footer.append(this.record, this.prize, this.ticker, this.start);
-    this.panel.append(header, this.admin, footer); show(this.panel, false); root.append(this.panel);
+    this.panel.append(bar, footer); show(this.panel, false); root.append(this.panel);
   }
   /** @returns {void} */
   refresh() {

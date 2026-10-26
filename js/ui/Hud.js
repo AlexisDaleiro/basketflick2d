@@ -1,7 +1,7 @@
 import * as C from '../config/constants.js';
 import { es } from '../i18n/es.js';
-import { BRAND_SVG } from '../render/brand.js';
 import { h, show } from './dom.js';
+import { brandBar } from './brandButton.js';
 
 const PAW_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" aria-hidden="true"><g fill="currentColor"><ellipse cx="20" cy="27" rx="11" ry="8"/><ellipse cx="6" cy="16" rx="5" ry="6"/><ellipse cx="15" cy="8" rx="5" ry="6"/><ellipse cx="26" cy="8" rx="5" ry="6"/><ellipse cx="35" cy="17" rx="5" ry="6"/></g></svg>';
 const HAND_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 180" aria-hidden="true"><path d="M42 155 18 115Q13 101 26 100L42 114V35Q42 20 54 23Q60 25 60 36V88Q66 76 76 88Q88 79 94 94Q110 92 108 111L101 151Z" fill="white" stroke="#000000" stroke-width="6"/><path d="M60 10V0M48 12 40 4M72 12 80 4" stroke="#F3C879" stroke-width="5"/></svg>';
@@ -17,9 +17,7 @@ export class Hud {
     const clock = h('div', 'hud-clock');
     this.clock = h('strong', '', String(C.ROUND_DURATION_SEC)); this.clock.id = 'timer';
     clock.append(h('span', 'hud-label', es.time), this.clock);
-    this.admin = h('button', 'hud-brand'); this.admin.type = 'button'; this.admin.setAttribute('aria-label', es.admin);
-    this.admin.dataset.admin = '';
-    this.admin.append(new DOMParser().parseFromString(BRAND_SVG, 'image/svg+xml').documentElement);
+    const { bar, admin } = brandBar(); this.admin = admin;
     this.meter = h('div', 'streak-meter');
     this.paws = [];
     for (let i = 0; i < C.FIRE_STREAK; i++) {
@@ -29,7 +27,7 @@ export class Hud {
     }
     this.streakLabel = h('span', 'streak-label', es.streak);
     this.meter.append(this.streakLabel);
-    this.root.append(points, clock, this.admin, this.meter);
+    this.root.append(bar, points, clock, this.meter);
     this.countdown = h('div', 'round-countdown'); this.countdown.setAttribute('aria-live', 'assertive');
     this.countdown.id = 'round-countdown';
     this.feedback = h('p', 'round-feedback'); this.feedback.setAttribute('aria-live', 'polite');

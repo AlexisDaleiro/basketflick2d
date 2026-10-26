@@ -7,7 +7,8 @@ import { Hud } from './Hud.js';
 import { h, show } from './dom.js';
 import { projectPoint } from '../render/projection.js';
 import { Vec2 } from '../physics/Vec2.js';
-import { ballLayer } from '../render/visibility.js';
+import { ballInNet, ballLayer } from '../render/visibility.js';
+import { crowd } from '../render/crowd.js';
 import { theme } from '../config/theme.js';
 
 export class PlayingScreen {
@@ -22,7 +23,7 @@ export class PlayingScreen {
     this.renderOrder = round.world.balls.slice();
     this.boardImpact = new Vec2(); this.rimImpact = new Vec2();
     this.boardImpactAt = -Infinity; this.rimImpactAt = -Infinity;
-    this.netStretch = 0; this.netVelocity = 0; this.trailElapsed = 0; this.misses = 0;
+    this.netStretch = 0; this.netVelocity = 0; this.netSway = 0; this.netSwayVelocity = 0; this.trailElapsed = 0; this.misses = 0;
     this.controller = null; this.unsubscribe = null;
     this.handleEvent = this.handleEvent.bind(this);
     show(this.panel, false); root.append(this.panel);
@@ -32,8 +33,8 @@ export class PlayingScreen {
   enter(payload) {
     this.controller = new AbortController();
     this.unsubscribe = this.bus.on('round:event', this.handleEvent);
-    this.netStretch = 0; this.netVelocity = 0; this.trailElapsed = 0; this.misses = 0;
-    this.particles.clear(); this.hud.reset();
+    this.netStretch = 0; this.netVelocity = 0; this.netSway = 0; this.netSwayVelocity = 0; this.trailElapsed = 0; this.misses = 0;
+    this.particles.clear(); this.hud.reset(); crowd.reset();
     this.round.reset({ ...(this.storage?.settings || {}), practice: Boolean(payload?.practice) });
     this.sfx.setEnabled(this.round.settings.soundEnabled);
     this.hud.update(this.round); show(this.panel, true);
@@ -53,7 +54,7 @@ export class PlayingScreen {
     }
     this.sfx.play(event.type, event.value);
     if (event.type === 'countdown' && event.value === 0) {
-      this.hud.reset(); this.particles.clear(); this.netStretch = 0; this.netVelocity = 0; this.misses = 0;
+      this.hud.reset(); this.particles.clear(); this.netStretch = 0; this.netVelocity = 0; this.netSway = 0; this.netSwayVelocity = 0; this.misses = 0;
       this.boardImpactAt = -Infinity; this.rimImpactAt = -Infinity;
     } else if (event.type === 'basket') {
       const hoop = this.round.world.hoop;
@@ -63,6 +64,8 @@ export class PlayingScreen {
       this.hud.addPoints(event.value, now);
       this.hud.message(event.ball.swish ? es.swish : es.basket, now);
       this.sfx.play('swish');
+      const cheer = (event.ball.swish ? C.CROWD_CHEER_SWISH : C.CROWD_CHEER_BASKET) + (this.round.streak >= C.FIRE_STREAK ? C.CROWD_CHEER_STREAK : 0);
+      crowd.cheer(cheer); this.sfx.play('cheer', cheer);
       try { navigator.vibrate?.(C.BASKET_VIBRATION_MS); } catch { /* Optional capability. */ }
     } else if (event.type === 'miss') {
       this.misses++;
@@ -74,7 +77,12 @@ export class PlayingScreen {
       projectPoint(ball.position.x - contact.nx * ball.radius, ball.position.y - contact.ny * ball.radius,
         ball.depth - contact.nz * ball.radius, point);
       if (event.type === 'sfx:board') this.boardImpactAt = now;
-      else this.rimImpactAt = now;
+      else {
+        this.rimImpactAt = now;
+        // A rim hit shakes the mesh away from the side the ball struck.
+        const side = Math.sign(ball.position.x - this.round.world.hoop.centerX) || 1;
+        this.netSwayVelocity -= side * C.NET_SWAY_IMPULSE * Math.min(1, event.value / C.SFX_IMPACT_REFERENCE);
+      }
     }
   }
 
@@ -88,6 +96,8 @@ export class PlayingScreen {
     }
     this.netVelocity += (-C.NET_SPRING * this.netStretch - C.NET_DAMPING * this.netVelocity) * dt;
     this.netStretch += this.netVelocity * dt;
+    this.netSwayVelocity += (-C.NET_SWAY_SPRING * this.netSway - C.NET_SWAY_DAMPING * this.netSwayVelocity) * dt;
+    this.netSway += this.netSwayVelocity * dt;
     this.particles.update(dt);
     this.trailElapsed += dt * C.MS_PER_SECOND;
     if (this.trailElapsed >= C.TRAIL_INTERVAL_MS) {
@@ -115,7 +125,7 @@ export class PlayingScreen {
     drawBoard(ctx, world.hoop); drawRim(ctx, world.hoop, false);
     this.drawImpact(ctx, this.boardImpact, this.boardImpactAt, C.BOARD_IMPACT_MS);
     for (const ball of this.renderOrder) if (ballLayer(ball, world.hoop) === 'inside-hoop') drawBall(ctx, ball, world.timeMs);
-    drawNet(ctx, world.hoop, this.netStretch); drawRim(ctx, world.hoop, true);
+    drawNet(ctx, world.hoop, this.netStretch, this.netSway, ballInNet(world.balls, world.hoop)); drawRim(ctx, world.hoop, true);
     // Balls between the camera and the hoop occlude the net, rather than crossing behind it.
     for (const ball of this.renderOrder) if (ballLayer(ball, world.hoop) === 'foreground') drawBall(ctx, ball, world.timeMs);
     this.drawImpact(ctx, this.rimImpact, this.rimImpactAt, C.RIM_IMPACT_MS);

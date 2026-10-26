@@ -57,8 +57,8 @@ export class Sfx {
   /** @param {boolean} enabled @returns {void} */
   setEnabled(enabled) { this.enabled = enabled; if (!enabled) this.stop(); }
 
-  /** @param {string} wave 'noise', 'sine', 'square' or 'sawtooth'. @param {number} frequency Hz. @param {number} duration s. @param {number} gain @param {number} [delay] s. @param {string} [filterType] @param {number} [filterFrequency] Hz. @param {number} [q] @param {number} [endFrequency] Hz. @returns {boolean} */
-  voice(wave, frequency, duration, gain, delay = 0, filterType = 'allpass', filterFrequency = frequency, q = C.SFX_BARK_Q, endFrequency = frequency) {
+  /** Noise sweeps its filter, oscillators their pitch, toward endFrequency. @param {string} wave 'noise', 'sine', 'square', 'triangle' or 'sawtooth'. @param {number} frequency Hz. @param {number} duration s. @param {number} gain @param {number} [delay] s. @param {string} [filterType] @param {number} [filterFrequency] Hz. @param {number} [q] @param {number} [endFrequency] Hz. @param {number} [attack] s. @returns {boolean} */
+  voice(wave, frequency, duration, gain, delay = 0, filterType = 'allpass', filterFrequency = frequency, q = C.SFX_BARK_Q, endFrequency = frequency, attack = C.SFX_ATTACK) {
     const ctx = this.context;
     if (this.unavailable || !this.enabled || !ctx || ctx.state !== 'running') return false;
     let slot = null;
@@ -68,15 +68,17 @@ export class Sfx {
     try {
       const start = ctx.currentTime + delay;
       source = wave === 'noise' ? ctx.createBufferSource() : ctx.createOscillator();
-      if (wave === 'noise') source.buffer = this.noise;
+      if (wave === 'noise') { source.buffer = this.noise; source.loop = true; }
       else {
         source.type = wave; source.frequency.setValueAtTime(frequency, start);
         source.frequency.exponentialRampToValueAtTime(endFrequency, start + duration);
       }
-      slot.filter.type = filterType; slot.filter.frequency.value = filterFrequency; slot.filter.Q.value = q;
+      slot.filter.type = filterType; slot.filter.Q.value = q;
+      slot.filter.frequency.cancelScheduledValues(ctx.currentTime); slot.filter.frequency.setValueAtTime(filterFrequency, start);
+      if (wave === 'noise' && endFrequency !== frequency) slot.filter.frequency.exponentialRampToValueAtTime(endFrequency, start + duration);
       slot.gain.gain.cancelScheduledValues(ctx.currentTime);
       slot.gain.gain.setValueAtTime(C.SFX_SILENCE, start);
-      slot.gain.gain.linearRampToValueAtTime(gain, start + C.SFX_ATTACK);
+      slot.gain.gain.linearRampToValueAtTime(gain, start + attack);
       slot.gain.gain.exponentialRampToValueAtTime(C.SFX_SILENCE, start + duration);
       source.connect(slot.filter); source.onended = slot.end; slot.source = source;
       source.start(start); source.stop(start + duration); return true;
@@ -90,7 +92,16 @@ export class Sfx {
     if (type === 'countdown' || type === 'tick') {
       this.voice('sine', type === 'countdown' && value === C.COUNTDOWN_STEPS - 1 ? C.SFX_GO_FREQUENCY : C.SFX_BEEP_FREQUENCY, C.SFX_BEEP_DURATION, C.SFX_NOTE_GAIN);
     } else if (type === 'buzzer') this.voice('sawtooth', C.SFX_BUZZER_FREQUENCY, C.SFX_BUZZER_DURATION, C.SFX_NOTE_GAIN);
-    else if (type === 'swish') this.voice('noise', C.SFX_SWISH_FREQUENCY, C.SFX_SWISH_DURATION, C.SFX_NOTE_GAIN, 0, 'bandpass', C.SFX_SWISH_FREQUENCY, C.SFX_SWISH_Q);
+    else if (type === 'swish') {
+      // Mesh rush sweeping down as the ball drops, plus the crisp brush of the strings.
+      this.voice('noise', C.SFX_SWISH_FREQUENCY, C.SFX_SWISH_DURATION, C.SFX_SWISH_GAIN, 0, 'bandpass', C.SFX_SWISH_FREQUENCY, C.SFX_SWISH_Q, C.SFX_SWISH_END_FREQUENCY, C.SFX_SWISH_ATTACK);
+      this.voice('noise', C.SFX_BRUSH_FREQUENCY, C.SFX_BRUSH_DURATION, C.SFX_BRUSH_GAIN, C.SFX_BRUSH_DELAY, 'highpass', C.SFX_BRUSH_FREQUENCY);
+    } else if (type === 'cheer') this.cheer(value);
+    else if (type === 'sfx:floor') {
+      const gain = Math.max(C.SFX_IMPACT_MIN_GAIN, Math.min(C.SFX_IMPACT_MAX_GAIN, value / C.SFX_FLOOR_REFERENCE));
+      this.voice('sine', C.SFX_FLOOR_HIGH, C.SFX_FLOOR_DURATION, gain, 0, 'allpass', C.SFX_FLOOR_HIGH, C.SFX_BARK_Q, C.SFX_FLOOR_LOW);
+      this.voice('noise', C.SFX_FLOOR_SLAP, C.SFX_FLOOR_SLAP_DURATION, gain / 2, 0, 'lowpass', C.SFX_FLOOR_SLAP);
+    }
     else if (type === 'sfx:rim') {
       const gain = Math.max(C.SFX_IMPACT_MIN_GAIN, Math.min(C.SFX_IMPACT_MAX_GAIN, value / C.SFX_IMPACT_REFERENCE));
       this.voice('sine', C.SFX_RIM_LOW, C.SFX_RIM_DURATION, gain);
@@ -102,6 +113,22 @@ export class Sfx {
       this.voice('square', C.SFX_BARK_HIGH, C.SFX_BARK_DURATION, C.SFX_NOTE_GAIN, 0, 'bandpass', C.SFX_BARK_FILTER, C.SFX_BARK_Q, C.SFX_BARK_LOW);
       this.voice('square', C.SFX_BARK_HIGH, C.SFX_BARK_DURATION, C.SFX_NOTE_GAIN, C.SFX_BARK_GAP, 'bandpass', C.SFX_BARK_FILTER, C.SFX_BARK_Q, C.SFX_BARK_LOW);
     }
+  }
+
+  /** Pet crowd: a swelling roar, scattered cheers, two barks and a meow. @param {number} intensity 0..1.6. @returns {void} */
+  cheer(intensity) {
+    const level = Math.max(C.SFX_CHEER_MIN, Math.min(C.CROWD_MAX_LEVEL, intensity || 1));
+    this.voice('noise', C.SFX_ROAR_FREQUENCY, C.SFX_ROAR_DURATION, C.SFX_ROAR_GAIN * level, 0, 'bandpass', C.SFX_ROAR_FREQUENCY, C.SFX_ROAR_Q, C.SFX_ROAR_END_FREQUENCY, C.SFX_ROAR_ATTACK);
+    this.voice('noise', C.SFX_CLAP_FREQUENCY, C.SFX_CLAP_DURATION, C.SFX_CLAP_GAIN * level, 0, 'highpass', C.SFX_CLAP_FREQUENCY, C.SFX_BARK_Q, C.SFX_CLAP_FREQUENCY, C.SFX_CLAP_ATTACK);
+    for (let i = 0; i < C.SFX_WOO_VOICES; i++) {
+      const pitch = C.SFX_WOO_LOW + Math.random() * (C.SFX_WOO_HIGH - C.SFX_WOO_LOW);
+      this.voice('sawtooth', pitch, C.SFX_WOO_DURATION + Math.random() * C.SFX_WOO_DURATION / 2, C.SFX_WOO_GAIN * level,
+        C.SFX_WOO_DELAY * (i + 1), 'lowpass', C.SFX_WOO_FILTER, C.SFX_BARK_Q, pitch * C.SFX_WOO_RISE, C.SFX_WOO_ATTACK);
+    }
+    this.voice('square', C.SFX_BARK_HIGH, C.SFX_BARK_DURATION, C.SFX_NOTE_GAIN * level, C.SFX_CHEER_BARK_DELAY, 'bandpass', C.SFX_BARK_FILTER, C.SFX_BARK_Q, C.SFX_BARK_LOW);
+    this.voice('square', C.SFX_BARK_HIGH * C.SFX_SECOND_BARK_PITCH, C.SFX_BARK_DURATION, C.SFX_NOTE_GAIN * level, C.SFX_CHEER_BARK_DELAY + C.SFX_BARK_GAP, 'bandpass', C.SFX_BARK_FILTER, C.SFX_BARK_Q, C.SFX_BARK_LOW);
+    this.voice('sawtooth', C.SFX_MEOW_LOW, C.SFX_MEOW_RISE, C.SFX_MEOW_GAIN * level, C.SFX_MEOW_DELAY, 'bandpass', C.SFX_MEOW_FILTER, C.SFX_MEOW_Q, C.SFX_MEOW_HIGH);
+    this.voice('sawtooth', C.SFX_MEOW_HIGH, C.SFX_MEOW_FALL, C.SFX_MEOW_GAIN * level, C.SFX_MEOW_DELAY + C.SFX_MEOW_RISE, 'bandpass', C.SFX_MEOW_FILTER, C.SFX_MEOW_Q, C.SFX_MEOW_END);
   }
 
   /** @returns {void} */

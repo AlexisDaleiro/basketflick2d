@@ -1,10 +1,12 @@
-const VERSION = '0.6.3';
+const VERSION = '0.7.0';
 const CACHE = `tb2d-v${VERSION}`;
 // Explicit precache list; tests/sw.test.js fails if any /js, /css or /icons file is missing.
 const ASSETS = [
   './',
   './index.html',
   './manifest.webmanifest',
+  './assets/brand/three-cats.png',
+  './assets/brand/three-dogs.png',
   './css/main.css',
   './js/audio/Sfx.js',
   './js/config/constants.js',
@@ -40,9 +42,11 @@ const ASSETS = [
   './js/render/Particles.js',
   './js/render/Renderer.js',
   './js/render/brand.js',
+  './js/render/crowd.js',
   './js/render/draw/background.js',
   './js/render/draw/ball.js',
   './js/render/draw/hoop.js',
+  './js/render/draw/ingredients.js',
   './js/render/draw/lab.js',
   './js/render/draw/path.js',
   './js/render/draw/paw.js',

@@ -120,7 +120,7 @@ export class Storage {
     const lead = validateLead(input); if (!lead.ok) return lead;
     const play = this.plays.find(item => item.id === id);
     if (!play) return { ok: false, error: 'saveFailed' };
-    play.name = lead.name; play.phone = lead.phone; play.consent = lead.consent; play.leadAt = this.now();
+    play.name = lead.name; play.phone = lead.phone; play.email = lead.email; play.consent = lead.consent; play.leadAt = this.now();
     const durable = this.write('plays', this.plays);
     return { ok: true, durable, play };
   }

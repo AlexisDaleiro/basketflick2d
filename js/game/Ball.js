@@ -12,7 +12,7 @@ export class Ball {
     this.shot = { launchedAt: 0, gateA: false, gateATime: 0, upwardThrough: false, resolved: false };
     this.state = 'inactive';
     this.opacity = 0;
-    this.angle = 0;
+    this.angle = 0; this.spin = 0;
     this.touchedRim = false;
     this.touchedBoard = false;
     this.touchedFloor = false;
@@ -24,7 +24,7 @@ export class Ball {
     this.spawnedAt = 0;
     this.depth = 0; this.previousDepth = 0; this.depthVelocity = 0;
     this.grabRadius = null;
-    this.basketStartX = 0; this.basketStartY = 0; this.basketStartDepth = 0;
+    this.spin = 0; // rad/s, frontal basket animation only
   }
 
   /** Reset all shot data before reuse. @param {number} x u. @param {number} y u. @returns {void} */

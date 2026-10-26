@@ -13,14 +13,14 @@ test('Every specified formula prefix is neutralized, including tab and CR', () =
   }
   assert.equal(csvCell(null), ''); assert.equal(csvCell(24), '24');
 });
-test('CSV uses UTF-8 BOM, semicolons, CRLF and the exact 18-column order', () => {
-  const play = { id: 'A-1', ts: new Date(2026, 9, 23, 22, 30, 7).getTime(), name: '=malicioso', phone: '+59898123456', consent: true,
+test('CSV uses UTF-8 BOM, semicolons, CRLF and the exact 19-column order', () => {
+  const play = { id: 'A-1', ts: new Date(2026, 9, 23, 22, 30, 7).getTime(), name: '=malicioso', phone: '+59898123456', email: 'ana@correo.com', consent: true,
     score: 30, baskets: 8, shots: 10, swishes: 2, bestStreak: 3, durationSec: 45, prizeWon: true, prizeCode: 'TD-ABCD', prizeDelivered: false };
   const csv = createCsv([play], { eventName: 'Expo;Uy', deviceLabel: 'Tablet A' });
   assert.equal(Buffer.from(csv)[0], 0xef); assert.equal(Buffer.from(csv)[1], 0xbb); assert.equal(Buffer.from(csv)[2], 0xbf);
   assert.equal(csv.charCodeAt(0), 0xfeff); assert.ok(csv.endsWith('\r\n'));
-  assert.equal(csv.slice(1).split('\r\n')[0], 'id;fecha;hora;evento;tablet;nombre;telefono;consentimiento;puntaje;canastas;tiros;precision_pct;swishes;mejor_racha;duracion_s;gano_premio;codigo_premio;premio_entregado');
-  assert.ok(csv.includes('A-1;23/10/2026;22:30:07;"Expo;Uy";Tablet A;\'=malicioso;098 123 456;1;30;8;10;80;2;3;45;1;TD-ABCD;0\r\n'));
+  assert.equal(csv.slice(1).split('\r\n')[0], 'id;fecha;hora;evento;tablet;nombre;telefono;email;consentimiento;puntaje;canastas;tiros;precision_pct;swishes;mejor_racha;duracion_s;gano_premio;codigo_premio;premio_entregado');
+  assert.ok(csv.includes('A-1;23/10/2026;22:30:07;"Expo;Uy";Tablet A;\'=malicioso;098 123 456;ana@correo.com;1;30;8;10;80;2;3;45;1;TD-ABCD;0\r\n'));
 });
 test('Local phones retain the leading zero as spaced text, and empty phones remain empty', () => {
   assert.equal(localPhone('+59898123456'), '098 123 456'); assert.equal(localPhone(null), '');

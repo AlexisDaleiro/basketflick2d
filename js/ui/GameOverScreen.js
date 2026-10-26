@@ -3,7 +3,7 @@ import { es } from '../i18n/es.js';
 import { ResultSession } from '../game/ResultSession.js';
 import { Particles } from '../render/Particles.js';
 import { h, show } from './dom.js';
-import { brandButton } from './brandButton.js';
+import { brandBar } from './brandButton.js';
 
 export class GameOverScreen {
   /** @param {{root:HTMLElement,storage:import('../storage/Storage.js').Storage,navigate:(state:string)=>void}} options */
@@ -11,7 +11,7 @@ export class GameOverScreen {
     this.storage = storage; this.navigate = navigate; this.session = new ResultSession(storage); this.particles = new Particles();
     this.panel = h('section', 'result-screen'); this.panel.dataset.state = C.STATES.GAME_OVER;
     this.panel.setAttribute('aria-label', es.overTitle); this.panel.dataset.nativeScroll = '';
-    this.admin = brandButton();
+    const { bar, admin } = brandBar(); this.admin = admin;
     this.content = h('div', 'result-content');
     const title = h('h1', '', es.overTitle);
     this.score = h('strong', 'final-score', '0');
@@ -23,22 +23,25 @@ export class GameOverScreen {
     this.name = h('input'); this.name.id = 'lead-name'; this.name.name = 'name'; this.name.maxLength = C.LEAD_NAME_MAX;
     this.name.autocomplete = 'off'; this.name.setAttribute('autocapitalize', 'words'); this.name.setAttribute('enterkeyhint', 'next');
     this.phone = h('input'); this.phone.id = 'lead-phone'; this.phone.name = 'phone'; this.phone.type = 'tel';
-    this.phone.inputMode = 'tel'; this.phone.autocomplete = 'off'; this.phone.setAttribute('enterkeyhint', 'done');
+    this.phone.inputMode = 'tel'; this.phone.autocomplete = 'off'; this.phone.setAttribute('enterkeyhint', 'next');
+    this.email = h('input'); this.email.id = 'lead-email'; this.email.name = 'email'; this.email.type = 'email'; this.email.maxLength = C.LEAD_EMAIL_MAX;
+    this.email.inputMode = 'email'; this.email.autocomplete = 'off'; this.email.setAttribute('autocapitalize', 'none'); this.email.spellcheck = false; this.email.setAttribute('enterkeyhint', 'done');
     const nameLabel = h('label', '', es.name); nameLabel.htmlFor = this.name.id;
     const phoneLabel = h('label', '', es.phone); phoneLabel.htmlFor = this.phone.id;
+    const emailLabel = h('label', '', es.email); emailLabel.htmlFor = this.email.id;
     this.consent = h('input'); this.consent.id = 'lead-consent'; this.consent.type = 'checkbox'; this.consent.name = 'consent';
     const consentLabel = h('label', 'consent-label'); consentLabel.append(this.consent, h('span', '', es.consent));
     this.error = h('p', 'form-error'); this.error.id = 'lead-error'; this.error.setAttribute('role', 'alert');
-    this.phone.setAttribute('aria-describedby', this.error.id); this.consent.setAttribute('aria-describedby', this.error.id);
+    for (const input of [this.phone, this.email, this.consent]) input.setAttribute('aria-describedby', this.error.id);
     this.saveReplay = h('button', 'primary save-replay', es.saveReplay); this.saveReplay.type = 'submit';
     this.save = h('button', 'secondary', es.save); this.save.type = 'submit';
     this.skip = h('button', 'secondary', es.skip); this.skip.type = 'button';
     const actions = h('div', 'lead-actions'); actions.append(this.saveReplay, this.save, this.skip);
-    this.form.append(formTitle, nameLabel, this.name, phoneLabel, this.phone, consentLabel, this.error, actions);
+    this.form.append(formTitle, nameLabel, this.name, phoneLabel, this.phone, emailLabel, this.email, consentLabel, this.error, actions);
     this.notice = h('p', 'storage-notice'); this.notice.setAttribute('role', 'status');
     this.thanks = h('h2', 'thanks'); this.thanks.setAttribute('role', 'status');
-    this.content.append(title, this.score, h('span', 'hud-label', es.points), this.stats, this.rank, this.prize, this.notice, this.form, this.thanks);
-    this.panel.append(this.admin, this.content); show(this.panel, false); root.append(this.panel);
+    this.content.append(bar, title, this.score, h('span', 'hud-label', es.points), this.stats, this.rank, this.prize, this.notice, this.form, this.thanks);
+    this.panel.append(this.content); show(this.panel, false); root.append(this.panel);
     this.resize = this.resize.bind(this);
   }
   /** Keep the form inside the visual viewport when the virtual keyboard opens. @returns {void} */
@@ -54,10 +57,11 @@ export class GameOverScreen {
   /** @param {any} result @returns {void} */
   enter(result) {
     this.session.enter(result); this.form.reset(); this.error.textContent = ''; this.panel.scrollTop = 0;
-    this.phone.setAttribute('aria-invalid', 'false');
+    this.phone.setAttribute('aria-invalid', 'false'); this.email.setAttribute('aria-invalid', 'false');
     this.controller = new AbortController(); const signal = this.controller.signal;
     this.form.addEventListener('submit', event => { event.preventDefault(); this.submit(event.submitter !== this.save); }, { signal });
-    this.phone.addEventListener('input', () => { this.consent.required = Boolean(this.phone.value.trim()); }, { signal });
+    const contact = () => { this.consent.required = Boolean(this.phone.value.trim() || this.email.value.trim()); };
+    this.phone.addEventListener('input', contact, { signal }); this.email.addEventListener('input', contact, { signal });
     this.skip.addEventListener('click', () => this.navigate(C.STATES.ATTRACT_MODE), { signal });
     window.addEventListener('resize', this.resize, { signal });
     window.visualViewport?.addEventListener('resize', this.resize, { signal });
@@ -75,10 +79,11 @@ export class GameOverScreen {
   }
   /** @param {boolean} replay @returns {void} */
   submit(replay) {
-    const result = this.session.save({ name: this.name.value, phone: this.phone.value, consent: this.consent.checked }, replay);
+    const result = this.session.save({ name: this.name.value, phone: this.phone.value, email: this.email.value, consent: this.consent.checked }, replay);
     this.error.textContent = result.ok ? '' : es[result.error];
     this.phone.setAttribute('aria-invalid', String(result.error === 'phoneInvalid'));
-    if (!result.ok) { (result.error === 'consentRequired' ? this.consent : this.phone).focus(); return; }
+    this.email.setAttribute('aria-invalid', String(result.error === 'emailInvalid'));
+    if (!result.ok) { (result.error === 'consentRequired' ? this.consent : result.error === 'emailInvalid' ? this.email : this.phone).focus(); return; }
     document.activeElement?.blur?.(); show(this.form, false); show(this.thanks, true);
     this.thanks.textContent = es.thanks(result.play.name);
     this.notice.textContent = this.storage.warning ? es[this.storage.warning] : '';

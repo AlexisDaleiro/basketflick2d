@@ -8,6 +8,9 @@ import { brandButton } from './brandButton.js';
 import { dayKey, publicName } from '../storage/ranking.js';
 import { localDateTime, localPhone } from '../storage/csv.js';
 
+/** Staff screens may be watched by players: keep two letters and the domain. @param {string|null} email @returns {string} */
+const maskEmail = email => email ? `${email.slice(0, 2)}***${email.slice(email.indexOf('@'))}` : '';
+
 /** Authenticated staff panel. Only the PIN subphase exists until verification succeeds. */
 export class AdminPanel {
   /** @param {{root:HTMLElement,storage:import('../storage/Storage.js').Storage,guard:import('../game/PinGuard.js').PinGuard,debug?:boolean,navigate:(state:string,payload?:any)=>void}} options */
@@ -130,7 +133,7 @@ export class AdminPanel {
       if (input._output) input._output.value = input.value;
     }
     const today = this.storage.plays.filter(play => play.dayKey === dayKey(this.storage.now()));
-    const counters = plays => es.counters(plays.length, plays.filter(play => play.phone).length, plays.filter(play => play.prizeWon).length, plays.filter(play => play.prizeDelivered).length);
+    const counters = plays => es.counters(plays.length, plays.filter(play => play.phone || play.email).length, plays.filter(play => play.prizeWon).length, plays.filter(play => play.prizeDelivered).length);
     this.today.textContent = `${es.today}: ${counters(today)}`; this.historic.textContent = `${es.historic}: ${counters(this.storage.plays)}`;
     this.winners.textContent = es.winnerRate(today.filter(play => play.prizeWon).length, today.length);
     this.table.replaceChildren(); const head = h('tr'); for (const text of es.tableHeaders) head.append(h('th', '', text));
@@ -139,7 +142,7 @@ export class AdminPanel {
     const signal = this.tableController.signal;
     for (const [index, play] of this.storage.ranking().slice(0, C.ADMIN_TOP_LIMIT).entries()) {
       const row = h('tr'); const phone = play.phone ? localPhone(play.phone) : '';
-      for (const text of [index + 1, publicName(play) || es.anonymous(Number(play.id.split('-')[1])), phone ? `${phone.slice(0, 3)} *** ${phone.slice(-3)}` : '', play.score, localDateTime(play.ts).time, play.prizeCode || '']) row.append(h('td', '', String(text)));
+      for (const text of [index + 1, publicName(play) || es.anonymous(Number(play.id.split('-')[1])), phone ? `${phone.slice(0, 3)} *** ${phone.slice(-3)}` : '', maskEmail(play.email), play.score, localDateTime(play.ts).time, play.prizeCode || '']) row.append(h('td', '', String(text)));
       const cell = h('td');
       if (play.prizeWon) {
         const input = h('input'); input.type = 'checkbox'; input.checked = play.prizeDelivered; input.setAttribute('aria-label', `${es.delivered} ${play.prizeCode}`);

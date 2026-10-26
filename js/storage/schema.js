@@ -1,5 +1,5 @@
 import * as C from '../config/constants.js';
-import { normalizePhone } from './leads.js';
+import { normalizeEmail, normalizePhone } from './leads.js';
 import { dayKey } from './ranking.js';
 
 /** @param {unknown} value @returns {boolean} */
@@ -34,11 +34,13 @@ export function repairPlay(play) {
     || !C.ROUND_DURATIONS.includes(play.durationSec) || play.baskets > play.shots || play.swishes > play.baskets
     || play.bestStreak > play.baskets) return null;
   const phone = typeof play.phone === 'string' ? normalizePhone(play.phone) : null;
+  const email = typeof play.email === 'string' ? normalizeEmail(play.email) : null;
+  const consent = Boolean((phone || email) && play.consent === true);
   return { id: play.id, ts: play.ts, dayKey: dayKey(play.ts), score: play.score, shots: play.shots,
     baskets: play.baskets, swishes: play.swishes, bestStreak: play.bestStreak, durationSec: play.durationSec,
     prizeWon: Boolean(play.prizeWon), prizeCode: /^TD-[A-HJ-NP-Z2-9]{4}$/.test(play.prizeCode) ? play.prizeCode : null,
     prizeDelivered: Boolean(play.prizeWon && play.prizeDelivered),
     name: typeof play.name === 'string' ? play.name.slice(0, C.LEAD_NAME_MAX) : null,
-    phone: phone && play.consent === true ? phone : null, consent: Boolean(phone && play.consent === true),
+    phone: consent && phone ? phone : null, email: consent && email ? email : null, consent,
     leadAt: integer(play.leadAt) || null };
 }

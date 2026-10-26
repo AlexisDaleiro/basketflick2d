@@ -18,11 +18,11 @@ export function localDateTime(timestamp) {
 }
 /** Pure Excel-friendly CSV, including original names and consent. @param {any[]} plays @param {{eventName:string,deviceLabel:string}} context @returns {string} */
 export function createCsv(plays, context) {
-  const header = 'id;fecha;hora;evento;tablet;nombre;telefono;consentimiento;puntaje;canastas;tiros;precision_pct;swishes;mejor_racha;duracion_s;gano_premio;codigo_premio;premio_entregado';
+  const header = 'id;fecha;hora;evento;tablet;nombre;telefono;email;consentimiento;puntaje;canastas;tiros;precision_pct;swishes;mejor_racha;duracion_s;gano_premio;codigo_premio;premio_entregado';
   const lines = [header];
   for (const play of plays) {
     const { date, time } = localDateTime(play.ts);
-    lines.push([play.id, date, time, context.eventName, context.deviceLabel, play.name, localPhone(play.phone),
+    lines.push([play.id, date, time, context.eventName, context.deviceLabel, play.name, localPhone(play.phone), play.email,
       play.consent ? 1 : 0, play.score, play.baskets, play.shots, play.shots ? Math.round(play.baskets / play.shots * 100) : 0,
       play.swishes, play.bestStreak, play.durationSec, play.prizeWon ? 1 : 0, play.prizeCode, play.prizeDelivered ? 1 : 0].map(csvCell).join(';'));
   }

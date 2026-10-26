@@ -44,8 +44,8 @@ export class Renderer {
     style.setProperty('--world-height', `${WORLD_HEIGHT * this.scale}px`);
     this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     this.background = this.ctx.createLinearGradient(0, 0, this.width, this.height);
-    this.background.addColorStop(0, theme.ink2);
-    this.background.addColorStop(1, theme.ink);
+    this.background.addColorStop(0, theme.plum);
+    this.background.addColorStop(1, theme.night);
   }
 
   /** @param {number} x CSS px. @param {number} y CSS px. @param {{x: number, y: number}} out Reused world vector. @returns {void} */
@@ -63,7 +63,7 @@ export class Renderer {
     ctx.translate(this.offsetX, this.offsetY);
     ctx.scale(this.scale, this.scale);
     drawBackground(ctx, time, this.bounds);
-    ctx.strokeStyle = theme.ink2;
+    ctx.strokeStyle = theme.plumDark;
     ctx.lineWidth = WORLD_BORDER_WIDTH;
     ctx.strokeRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
   }

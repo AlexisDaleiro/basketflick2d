@@ -21,3 +21,16 @@ export const BRAND_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2
 export function brandDataUrl(color) {
   return `data:image/svg+xml,${encodeURIComponent(BRAND_SVG.replaceAll('currentColor', color))}`;
 }
+
+/** Official wordmarks: black ink on transparency, resolved from this module so test pages also find them. */
+export const LOGO_URLS = Object.freeze({
+  dogs: new URL('../../assets/brand/three-dogs.png', import.meta.url).href,
+  cats: new URL('../../assets/brand/three-cats.png', import.meta.url).href,
+});
+
+const logos = {};
+/** Lazily decoded wordmark for canvas; null until ready or outside a browser. @param {'dogs'|'cats'} name @returns {HTMLImageElement|null} */
+export function logoImage(name) {
+  if (!logos[name] && typeof Image !== 'undefined') { logos[name] = new Image(); logos[name].src = LOGO_URLS[name]; }
+  return logos[name]?.complete && logos[name].naturalWidth ? logos[name] : null;
+}

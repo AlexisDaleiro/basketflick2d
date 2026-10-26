@@ -26,10 +26,16 @@ test('Uruguayan mobile validation accepts all specified forms and rejects foreig
   assert.equal(normalizePhone('  '), '');
 });
 
-test('Lead validation requires consent only for a phone, caps the name and normalizes consent', () => {
+test('Lead validation requires consent only for a phone or e-mail, caps the name and normalizes consent', () => {
   assert.equal(validateLead({ name: 'Ana', phone: '098123456', consent: false }).error, 'consentRequired');
   assert.equal(validateLead({ name: '', phone: '123', consent: true }).error, 'phoneInvalid');
-  assert.deepEqual(validateLead({ name: ' Ana ', phone: '', consent: true }), { ok: true, name: 'Ana', phone: null, consent: false });
+  assert.deepEqual(validateLead({ name: ' Ana ', phone: '', consent: true }), { ok: true, name: 'Ana', phone: null, email: null, consent: false });
+  assert.equal(validateLead({ name: 'Ana', phone: '', email: 'ana@correo.com', consent: false }).error, 'consentRequired');
+  for (const email of ['ana', 'ana@', 'ana@correo', 'a b@correo.com', '@correo.com', 'ana@@correo.com']) {
+    assert.equal(validateLead({ name: '', phone: '', email, consent: true }).error, 'emailInvalid', email);
+  }
+  assert.deepEqual(validateLead({ name: '', phone: '098123456', email: ' Ana.Perez@Correo.com.uy ', consent: true }),
+    { ok: true, name: null, phone: '+59898123456', email: 'ana.perez@correo.com.uy', consent: true });
   assert.equal(validateLead({ name: 'A'.repeat(30), phone: '', consent: false }).name.length, 24);
 });
 
