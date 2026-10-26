@@ -1,9 +1,7 @@
 import * as C from '../../config/constants.js';
 import { theme } from '../../config/theme.js';
-import { drawPaw } from './paw.js';
 import { depthScale } from '../projection.js';
 import { roundedRectPath } from './path.js';
-import { logoImage } from '../brand.js';
 
 /** Frontal backboard, projected from the same finite slab used by collisions. @param {CanvasRenderingContext2D} ctx @param {import('../../game/FrontalHoop.js').FrontalHoop} hoop @returns {void} */
 export function drawBoard(ctx, hoop) {
@@ -22,16 +20,6 @@ export function drawBoard(ctx, hoop) {
   const targetY = C.FRONTAL_HORIZON_Y + (C.FRONTAL_TARGET_TOP + hoop.rimY - C.FRONTAL_RIM_Y - C.FRONTAL_HORIZON_Y) * scale;
   ctx.strokeRect(C.FRONTAL_CENTER_X - C.FRONTAL_TARGET_WIDTH * scale / 2, targetY,
     C.FRONTAL_TARGET_WIDTH * scale, C.FRONTAL_TARGET_HEIGHT * scale);
-  // Three Dogs and Three Cats flank the target, clear of the HUD that covers the board top.
-  const logoWidth = C.FRONTAL_LOGO_WIDTH * scale;
-  const logoCenterY = targetY + C.FRONTAL_TARGET_HEIGHT * scale / 2;
-  for (const [name, side] of [['dogs', -1], ['cats', 1]]) {
-    const image = logoImage(name); const cx = C.FRONTAL_CENTER_X + side * C.FRONTAL_LOGO_OFFSET * scale;
-    if (image) {
-      const logoHeight = logoWidth * image.naturalHeight / image.naturalWidth;
-      ctx.drawImage(image, cx - logoWidth / 2, logoCenterY - logoHeight / 2, logoWidth, logoHeight);
-    } else drawPaw(ctx, cx, logoCenterY, C.FRONTAL_PAW_SIZE * scale / 2, theme.lilac);
-  }
   ctx.restore();
 }
 

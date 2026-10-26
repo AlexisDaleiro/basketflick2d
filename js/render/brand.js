@@ -28,9 +28,17 @@ export const LOGO_URLS = Object.freeze({
   cats: new URL('../../assets/brand/three-cats.png', import.meta.url).href,
 });
 
-const logos = {};
-/** Lazily decoded wordmark for canvas; null until ready or outside a browser. @param {'dogs'|'cats'} name @returns {HTMLImageElement|null} */
-export function logoImage(name) {
-  if (!logos[name] && typeof Image !== 'undefined') { logos[name] = new Image(); logos[name].src = LOGO_URLS[name]; }
-  return logos[name]?.complete && logos[name].naturalWidth ? logos[name] : null;
+/** Official product packshots shown courtside. */
+export const BAG_URLS = Object.freeze({
+  dogsAdult: new URL('../../assets/brand/bag-dogs-adult.webp', import.meta.url).href,
+  dogsSenior: new URL('../../assets/brand/bag-dogs-senior.webp', import.meta.url).href,
+  catsKitten: new URL('../../assets/brand/bag-cats-kitten.webp', import.meta.url).href,
+  catsSterilised: new URL('../../assets/brand/bag-cats-sterilised.png', import.meta.url).href,
+});
+
+const bags = {};
+/** Lazily decoded packshot for canvas; null until ready or outside a browser. @param {keyof BAG_URLS} name @returns {HTMLImageElement|null} */
+export function bagImage(name) {
+  if (!bags[name] && typeof Image !== 'undefined') { bags[name] = new Image(); bags[name].src = BAG_URLS[name]; }
+  return bags[name]?.complete && bags[name].naturalWidth ? bags[name] : null;
 }

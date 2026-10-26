@@ -1,6 +1,4 @@
 import { theme } from '../../config/theme.js';
-import { logoImage } from '../brand.js';
-import { roundedRectPath } from './path.js';
 
 const OUTLINE = 4; // u at unit scale
 
@@ -86,25 +84,3 @@ export function drawIngredientDecal(ctx, kind, label, x, y, size) {
   ctx.restore();
 }
 
-/** Standing food bag with the official wordmark on its label. @param {CanvasRenderingContext2D} ctx @param {'dogs'|'cats'} brand @param {number} x u, center. @param {number} bottom u. @param {number} height u. @returns {void} */
-export function drawFoodBag(ctx, brand, x, bottom, height) {
-  const width = height * 0.68; const top = bottom - height; const half = width / 2;
-  ctx.save(); ctx.lineWidth = 5; ctx.strokeStyle = theme.ink; ctx.lineJoin = 'round';
-  ctx.globalAlpha = 0.35; ctx.fillStyle = theme.ink;
-  ctx.beginPath(); ctx.ellipse(x, bottom, half * 1.1, 10, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
-  ctx.fillStyle = brand === 'dogs' ? theme.purple : theme.lilac;
-  ctx.beginPath(); ctx.moveTo(x - half, top + 16);
-  for (let i = 0; i <= 8; i++) ctx.lineTo(x - half + width * i / 8, top + (i % 2 ? 6 : 16));
-  ctx.lineTo(x + half + 6, bottom - 8); ctx.quadraticCurveTo(x, bottom + 6, x - half - 6, bottom - 8); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = theme.yellow; ctx.fillRect(x - half + 3, top + 26, width - 6, 14);
-  ctx.fillStyle = theme.white; roundedRectPath(ctx, x - half + 12, top + 50, width - 24, (width - 24) * 0.84, 12); ctx.fill(); ctx.stroke();
-  const logo = logoImage(brand);
-  if (logo) {
-    const w = width - 36; ctx.drawImage(logo, x - w / 2, top + 56, w, w * logo.naturalHeight / logo.naturalWidth);
-  }
-  ctx.fillStyle = '#A8663A';
-  for (const [dx, dy] of [[-0.22, 0.14], [0, 0.1], [0.22, 0.14], [-0.1, 0.06], [0.12, 0.05]]) {
-    ctx.beginPath(); ctx.arc(x + dx * width, bottom - dy * height - 14, height * 0.04, 0, Math.PI * 2); ctx.fill();
-  }
-  ctx.restore();
-}

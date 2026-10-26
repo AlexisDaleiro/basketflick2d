@@ -3,12 +3,18 @@ import { theme } from '../../config/theme.js';
 import { es } from '../../i18n/es.js';
 import { drawCrowd } from '../crowd.js';
 import { drawPaw } from './paw.js';
-import { drawFoodBag, drawIngredientDecal } from './ingredients.js';
+import { drawIngredientDecal } from './ingredients.js';
+import { bagImage } from '../brand.js';
 
 // Ingredients from the Three recipes, painted on the court sides: [kind, x u, y u, size u].
 const DECALS = Object.freeze([
-  ['chicken', 150, 1075, 52], ['carrot', 112, 1245, 60], ['rice', 168, 1430, 68],
-  ['salmon', 930, 1075, 52], ['sweetPotato', 968, 1245, 60], ['kibble', 912, 1430, 68],
+  ['chicken', 150, 1120, 52], ['carrot', 112, 1275, 60], ['rice', 168, 1440, 68],
+  ['salmon', 930, 1120, 52], ['sweetPotato', 968, 1275, 60], ['kibble', 912, 1440, 68],
+]);
+// Courtside packshots, back to front: [bag, center x u, base y u, height u].
+const BAGS = Object.freeze([
+  ['dogsAdult', 68, 1030, 200], ['catsSterilised', 1012, 1030, 200],
+  ['dogsSenior', 178, 1068, 218], ['catsKitten', 902, 1068, 218],
 ]);
 
 /** Arena decoration also covers the letterbox in logical coordinates. @param {CanvasRenderingContext2D} ctx @param {number} time s. @param {{minX:number,maxX:number,minY:number,maxY:number}} bounds @returns {void} */
@@ -38,9 +44,17 @@ export function drawBackground(ctx, time, bounds) {
   drawCourt(ctx, bounds, backY);
   drawLedBoard(ctx, time, bounds, backY - C.BRAND_BOARD_HEIGHT);
   for (const [kind, x, y, size] of DECALS) drawIngredientDecal(ctx, kind, es.ingredients[kind], x, y, size);
-  drawFoodBag(ctx, 'dogs', C.BAG_INSET, backY + C.BAG_DROP, C.BAG_HEIGHT);
-  drawFoodBag(ctx, 'cats', C.WORLD_WIDTH - C.BAG_INSET, backY + C.BAG_DROP, C.BAG_HEIGHT);
+  for (const [name, x, bottom, height] of BAGS) drawBag(ctx, name, x, bottom, height);
   ctx.restore();
+}
+
+/** Packshot standing on the court with a contact shadow. @param {CanvasRenderingContext2D} ctx @param {keyof import('../brand.js').BAG_URLS} name @param {number} x u. @param {number} bottom u. @param {number} height u. @returns {void} */
+function drawBag(ctx, name, x, bottom, height) {
+  const image = bagImage(name); if (!image) return;
+  const width = height * image.naturalWidth / image.naturalHeight;
+  ctx.globalAlpha = 0.4; ctx.fillStyle = theme.ink;
+  ctx.beginPath(); ctx.ellipse(x, bottom - 4, width * 0.58, 12, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.globalAlpha = 1; ctx.drawImage(image, x - width / 2, bottom - height, width, height);
 }
 
 /** Purple hardwood in perspective, with the court, key and center paw. @param {CanvasRenderingContext2D} ctx @param {{minX:number,maxX:number,maxY:number}} bounds @param {number} backY u. @returns {void} */

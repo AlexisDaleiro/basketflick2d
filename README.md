@@ -30,7 +30,8 @@ numérico propio; «Cancelar» o «Salir» vuelve a portada. Abrir admin durante
 ronda la descarta sin guardar.
 
 La arena muestra la grada de mascotas, una banda LED con beneficios publicados
-en threepetfood.com.br (`es.ledBenefits`), bolsas de producto e ingredientes de las
+en threepetfood.com.br (`es.ledBenefits`), fotos de cuatro bolsas reales (Three Dogs Adultos y Sênior 7+, Three Cats
+Filhotes y Castrados, en `assets/brand/`) e ingredientes de las
 recetas pintados en la cancha (`es.ingredients`).
 
 La portada muestra una demo silenciosa con tiros cada 2,2 s, el récord diario,
